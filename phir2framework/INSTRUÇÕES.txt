@@ -1,0 +1,46 @@
+_______________________________________________________________________________
+
+    Como rodar o programa
+_______________________________________________________________________________
+
+Primeiramente, instalar biblioteca ARIA e simulador MobileSim
+
+Depois, há duas formas de compilar o programa:
+
+ -- Usando o Makefile
+
+vai até a pasta phir2framework e digite make
+o programa vai ser compilado em uma pasta ../build-make (que fica ao lado da pasta 'phir2framework')
+para rodar digite ../build-make/program
+
+ -- Usando o QtCreator
+
+vai até a pasta phir2framework e abre o arquivo PhiR2Framework.pro no QtCreator
+Compila e roda dentro da IDE
+(os arquivos gerados estarão em ../build-PhiR2Framework-Desktop-Debug ou ../build-PhiR2Framework-Desktop-Release)
+
+OBS: antes de rodar o programa é preciso abrir o simulador MobileSIM (ou ligar o robô real, se for o caso). 
+No simulador é preciso escolher um mapa. Use o mapa 3loops.map, disponível no moodle.
+
+_______________________________________________________________________________
+
+      Controles do framework
+_______________________________________________________________________________
+
+-- modos de movimentação
+1 : controle manual simples (velocidades fixas)
+2 : controle manual velocidade linear (CIMA e BAIXO) e vel. angular (ESQ e DIR)
+3 : avoid obstacles
+4 : wall following
+
+CIMA, BAIXO, ESQ, DIR : move o robô
+
+W, A, S, D : move a camera
+
++ e - : altera zoom da camera
+L     : fixa a camera novamente sobre o robô, ou deixa a camera fixa no ponto atual do mapa onde o robô está
+
+R     : altera visualização dos sensores (sonar cone -> sonar linha -> laser linha -> laser area -> somente robô) 
+G     : mostra valor associado a cada celula do mapa
+
+ESC   : fecha programa
