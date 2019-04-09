@@ -145,8 +145,26 @@ void Robot::wanderAvoidingCollisions()
     float minFrontLaser = base.getMinLaserValueInRange(75,105);
     float minRightLaser = base.getMinLaserValueInRange(106,180);
 
-    float linVel=0;
+    float linVel=0.5;
     float angVel=0;
+//    controlTimer.waitTime(2);
+    //TODO - implementar desvio de obstaculos
+        if (minFrontLaser < 0.8){
+            std::cout << "ENTROU" << "\n";
+            linVel = 0;
+            angVel = 0.5;
+            std::cout << minFrontLaser << "\n";
+            controlTimer.waitTime(1);
+        }
+        else{
+            std::cout << "SAIU" << "\n";
+            std::cout << minFrontLaser << "\n";
+            linVel = 0.5;
+            angVel = 0;
+        }
+        base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
+        usleep(5000);
+
 
 
 
