@@ -150,7 +150,7 @@ void Robot::wanderAvoidingCollisions()
 
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
 
-    float limitWallDistance = 0.75;
+    float limitWallDistance = 0.7;
 
     bool free, leftFrontBlocked, rightFrontBlocked, leftBlocked, rightBlocked;
 
