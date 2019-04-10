@@ -150,7 +150,7 @@ void Robot::wanderAvoidingCollisions()
 
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
 
-    float limitWallDistance = 1.0;
+    float limitWallDistance = 0.75;
 
     bool free, leftFrontBlocked, rightFrontBlocked, leftBlocked, rightBlocked;
 
@@ -158,46 +158,27 @@ void Robot::wanderAvoidingCollisions()
 
     rightFrontBlocked = (minRightLaser <= limitWallDistance) && (minFrontLaser <= limitWallDistance);
 
+    leftBlocked = (minLeftLaser <= limitWallDistance);
+
+    rightBlocked = (minRightLaser <= limitWallDistance);
+
     free = (minFrontLaser > limitWallDistance);
 
     if(free)
     {
-        std::cout << "Free." << std::endl;;
+        std::cout << "Free." << std::endl;
         base.setMovementSimple(FRONT);
     }
-    if(leftFrontBlocked)
+    if(leftFrontBlocked || leftBlocked)
     {
-        std::cout << "leftFrontBlocked" << std::endl;;
+        std::cout << "leftFrontBlocked" << std::endl;
         base.setMovementSimple(RIGHT);
     }
-    if(rightFrontBlocked)
+    if(rightFrontBlocked || rightBlocked)
     {
-        std::cout << "rightFrontBlocked" << std::endl;;
+        std::cout << "rightFrontBlocked" << std::endl;
         base.setMovementSimple(LEFT);
     }
-
-//    controlTimer.waitTime(2);
-    //TODO - implementar desvio de obstaculos
-//        if (minFrontLaser < 0.8){
-//            std::cout << "ENTROU" << "\n";
-//            linVel = 0;
-//            angVel = 0.5;
-//            std::cout << minFrontLaser << "\n";
-//            controlTimer.waitTime(1);
-//        }
-//        else{
-//            std::cout << "SAIU" << "\n";
-//            std::cout << minFrontLaser << "\n";
-//            linVel = 0.5;
-//            angVel = 0;
-//        }
-//        base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
-//        usleep(5000);
-
-
-
-
-//    base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
 }
 
 void Robot::wallFollow()
