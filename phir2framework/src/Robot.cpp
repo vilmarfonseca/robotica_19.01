@@ -147,28 +147,57 @@ void Robot::wanderAvoidingCollisions()
 
     float linVel=0.5;
     float angVel=0;
-//    controlTimer.waitTime(2);
-    //TODO - implementar desvio de obstaculos
-        if (minFrontLaser < 0.8){
-            std::cout << "ENTROU" << "\n";
-            linVel = 0;
-            angVel = 0.5;
-            std::cout << minFrontLaser << "\n";
-            controlTimer.waitTime(1);
-        }
-        else{
-            std::cout << "SAIU" << "\n";
-            std::cout << minFrontLaser << "\n";
-            linVel = 0.5;
-            angVel = 0;
-        }
-        base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
-        usleep(5000);
-
-
-
 
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
+
+    float limitWallDistance = 1.0;
+
+    bool free, leftFrontBlocked, rightFrontBlocked, leftBlocked, rightBlocked;
+
+    leftFrontBlocked = (minLeftLaser <= limitWallDistance) && (minFrontLaser <= limitWallDistance);
+
+    rightFrontBlocked = (minRightLaser <= limitWallDistance) && (minFrontLaser <= limitWallDistance);
+
+    free = (minFrontLaser > limitWallDistance);
+
+    if(free)
+    {
+        std::cout << "Free." << std::endl;;
+        base.setMovementSimple(FRONT);
+    }
+    if(leftFrontBlocked)
+    {
+        std::cout << "leftFrontBlocked" << std::endl;;
+        base.setMovementSimple(RIGHT);
+    }
+    if(rightFrontBlocked)
+    {
+        std::cout << "rightFrontBlocked" << std::endl;;
+        base.setMovementSimple(LEFT);
+    }
+
+//    controlTimer.waitTime(2);
+    //TODO - implementar desvio de obstaculos
+//        if (minFrontLaser < 0.8){
+//            std::cout << "ENTROU" << "\n";
+//            linVel = 0;
+//            angVel = 0.5;
+//            std::cout << minFrontLaser << "\n";
+//            controlTimer.waitTime(1);
+//        }
+//        else{
+//            std::cout << "SAIU" << "\n";
+//            std::cout << minFrontLaser << "\n";
+//            linVel = 0.5;
+//            angVel = 0;
+//        }
+//        base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
+//        usleep(5000);
+
+
+
+
+//    base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
 }
 
 void Robot::wallFollow()
