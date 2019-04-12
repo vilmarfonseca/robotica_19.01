@@ -203,18 +203,21 @@ void Robot::wallFollow()
     double tp,td,ti;
     double integralTerm;
     double setpoint = 1.4;
+    int side;
 
-    tp = 1;
-    td = 15;
+    tp = 2;
+    td = 20000;
     ti = 0.00015;
 
     if(isFollowingLeftWall_) {
         std::cout << "Following LEFT wall" << std::endl;
         pv = minLeftLaser;
+        side = -1;
     }
     else {
         std::cout << "Following RIGHT wall" << std::endl;
         pv = minRightLaser;
+        side = 1;
     }
 
     CTE = setpoint - pv;
@@ -225,7 +228,7 @@ void Robot::wallFollow()
 
     D = td * ((CTE - prev_CTE) / td);
 
-    angVel = P + I + D;
+    angVel = (P + I + D) * side;
 
     prev_CTE = CTE;
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
