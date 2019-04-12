@@ -202,11 +202,11 @@ void Robot::wallFollow()
     double pv;
     double tp,td,ti;
     double integralTerm;
-    double setpoint = 1.4;
+    double setpoint = 1.5;
     int side;
 
-    tp = 2;
-    td = 20000;
+    tp = 3;
+    td = 71;
     ti = 0.00015;
 
     if(isFollowingLeftWall_) {
