@@ -206,7 +206,7 @@ void Robot::wallFollow()
     int side;
 
     tp = 3;
-    td = 71;
+    td = 70;
     ti = 0.00015;
 
     if(isFollowingLeftWall_) {
@@ -226,9 +226,11 @@ void Robot::wallFollow()
     integralTerm += CTE * td;
     I = ti * integralTerm;
 
-    D = td * ((CTE - prev_CTE) / td);
+    D = td * (CTE - prev_CTE);
 
     angVel = (P + I + D) * side;
+
+    std::cout << "CTE: " << CTE << std::endl;
 
     prev_CTE = CTE;
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
