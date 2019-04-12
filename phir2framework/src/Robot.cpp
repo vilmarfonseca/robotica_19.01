@@ -31,8 +31,12 @@ Robot::~Robot()
 }
 
 ////////////////////////////////////
-///// INITIALIZE & RUN METHODS /////
+///// INITIALIZE, RUN METHODS //////
+///// & GLOBAL VARIABLES ///////////
 ////////////////////////////////////
+
+double CTE =0;
+double prev_CTE = 0;
 
 void Robot::initialize(ConnectionMode cmode, LogMode lmode, std::string fname)
 {
@@ -191,19 +195,39 @@ void Robot::wallFollow()
     float minFrontLaser = base.getMinLaserValueInRange(75,105);
     float minRightLaser = base.getMinLaserValueInRange(106,180);
 
-    float linVel=0;
+    float linVel=0.5;
     float angVel=0;
 
-    if(isFollowingLeftWall_)
+    double P,I,D;
+    double pv;
+    double tp,td,ti;
+    double integralTerm;
+    double setpoint = 1.4;
+
+    tp = 1;
+    td = 15;
+    ti = 0.00015;
+
+    if(isFollowingLeftWall_) {
         std::cout << "Following LEFT wall" << std::endl;
-    else
+        pv = minLeftLaser;
+    }
+    else {
         std::cout << "Following RIGHT wall" << std::endl;
+        pv = minRightLaser;
+    }
 
-    //TODO - implementar wall following usando PID
+    CTE = setpoint - pv;
+    P = tp * CTE;
 
+    integralTerm += CTE * td;
+    I = ti * integralTerm;
 
+    D = td * ((CTE - prev_CTE) / td);
 
+    angVel = P + I + D;
 
+    prev_CTE = CTE;
     base.setWheelsVelocity_fromLinAngVelocity(linVel, angVel);
 }
 
