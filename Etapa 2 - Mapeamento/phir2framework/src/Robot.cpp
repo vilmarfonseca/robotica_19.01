@@ -304,7 +304,6 @@ void Robot::mappingWithLogOddsUsingLaser()
             }
 
             c->occupancy = getOccupancyFromLogOdds(c->logodds);
-            c->updateOccupancyFromLogOdds();
         }
     }
 }
