@@ -288,33 +288,140 @@ void Robot::mappingWithLogOddsUsingLaser()
             // base.getAngleOfSonarBeam(k) ou base.getAngleOfLaserBeam(k). E também
             // verificar se a distância r é próxima ou menor da medida do sensor k, dada pelas funções
             // base.getKthSonarReading(k) ou base.getKthLaserReading(k).
-            if((fabs(phi - base.getAngleOfLaserBeam(k)) > beta/2) ||(r > std::min(maxRange, base.getKthLaserReading(k))))
+            if((fabs(phi - base.getAngleOfLaserBeam(k)) > beta/2) ||(r > std::min(maxRange, (base.getKthLaserReading(k)+(alpha/2)))))
             {
                c->logodds += 0;
-               c->occupancy = getOccupancyFromLogOdds(c->logodds);
-               c->updateOccupancyFromLogOdds();
             }
 
             else if((base.getKthLaserReading(k) < maxRange) && (fabs(r - base.getKthLaserReading(k))< alpha/2))
             {
                c->logodds += locc;
-               c->occupancy = getOccupancyFromLogOdds(c->logodds);
-               c->updateOccupancyFromLogOdds();
             }
 
             else if(r <= base.getKthLaserReading(k))
             {
                c->logodds += lfree;
-               c->occupancy = getOccupancyFromLogOdds(c->logodds);
-               c->updateOccupancyFromLogOdds();
             }
+
+            c->occupancy = getOccupancyFromLogOdds(c->logodds);
+            c->updateOccupancyFromLogOdds();
         }
     }
 }
 
 void Robot::mappingUsingSonar()
 {
+    float alpha = 0.1; //  10 cm
+    float beta = 30.0;  // 30.0 degrees
 
+    int scale = grid->getMapScale();// Escala do grid -> indica quantas células correspondem a um metro.
+                                    // Por padrão o scale é 10, logo se robô fizer leitura de
+                                    // 5m o método deve atualizar uma distância de 50 células.
+    float maxRange = base.getMaxLaserRange(); //Valor em metros, multiplicar por scale para obter em células.
+    int maxRangeInt = maxRange*scale;
+
+    int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
+    int robotY=currentPose_.y*scale;
+    float robotAngle = currentPose_.theta;  //Teta do robô.
+
+    // how to access a grid cell
+    //Cell* c=grid->getCell(robotX,robotY);
+
+    // TODO: update cells in the sensors' field-of-view
+    // ============================================================================
+    // you only need to check the cells at most maxRangeInt from the robot position
+    // that is, in the following square region:
+    //
+    //  (robotX-maxRangeInt,robotY+maxRangeInt)  -------  (robotX+maxRangeInt,robotY+maxRangeInt)
+    //                     |                       \                         |
+    //                     |                        \                        |
+    //                     |                         \                       |
+    //  (robotX-maxRangeInt,robotY-maxRangeInt)  -------  (robotX+maxRangeInt,robotY-maxRangeInt)
+
+
+    int minX, minY, maxX, maxY, i, j;
+    minX = robotX - maxRangeInt;
+    minY = robotY - maxRangeInt;
+    maxX = robotX + maxRangeInt;
+    maxY = robotY + maxRangeInt;
+
+    float occUpdate, occ;
+
+    //occUpdate = 0.0;
+    //occ = 0.99;
+
+    float R = maxRange;
+
+    for(i = minX; i <= maxX; i++)
+    {
+        for(j = minY; j <= maxY; j++)
+        {
+            //occUpdate = 0.0;
+            // Celula a ser analisada.
+            Cell* c = grid->getCell(i,j);
+
+            occ = c->occupancySonar;
+            // Computar a distância r até a célula onde está o robô.
+            float r = 0.0;
+            //             (xi - x)^2         (yi - y)^2
+            r = sqrt((pow(i - robotX,2) + pow(j - robotY,2)));
+            // Dividí-la por scale para convertê-la para metros e poder compará-la com as medidas dos sensores.
+            r = r/scale;
+
+            // Computar a orientação φ da célula em relação ao robô em coordenadas locais.
+            float phi = 0.0;
+            phi = RAD2DEG(atan2(j - robotY, i - robotX)) - robotAngle;
+            // OBS: Todos os ângulos computados devem estar devidamente normalizados (entre −180◦ e 180◦).
+            //Para auxiliar use a função: phi = normalizeAngleDEG(phi);
+            phi = normalizeAngleDEG(phi);
+
+            // Encontrar a medida do sensor k mais próxima da orientação da célula em relação ao robô.
+            int k = 0;
+            // base.getNearestSonarBeam(phi) ou base.getNearestLaserBeam(phi),
+            // retornam o índice da medida mais próxima do ângulo phi.
+            k = base.getNearestLaserBeam(phi);
+
+            // Atualizar a ocupação da célula como ocupada ou livre dependendo da região do sensor em que se
+            // enquadrar.
+            // Para isso deve-se testar se a célula está dentro da abertura do campo-de-visão do sensor
+            // através da diferença entre a orientação φ da célula e a orientação da medida k, dada pelas funções
+            // base.getAngleOfSonarBeam(k) ou base.getAngleOfLaserBeam(k). E também
+            // verificar se a distância r é próxima ou menor da medida do sensor k, dada pelas funções
+            // base.getKthSonarReading(k) ou base.getKthLaserReading(k).
+
+            if((fabs(phi - base.getAngleOfLaserBeam(k)) > beta/2) ||(r > std::min(maxRange, (base.getKthLaserReading(k)+(alpha/2)))))
+            {
+                // Regiao III
+                occ += 0.0;
+            }
+            else if(((base.getKthLaserReading(k)) < maxRange) && (fabs(r - base.getKthLaserReading(k)) < (alpha / 2)))
+            {
+                // Regiao I
+                occUpdate = (((R - r) / R) + ((beta - alpha) / beta)) / 2;
+                occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
+            }
+
+            else if(r <= base.getKthLaserReading(k))
+            {
+                // Regiao II
+                occUpdate = 1.0 - ((((R - r) / R) + ((beta - alpha) / beta)) / 2);
+                occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
+            }
+
+            // Evitar que o valor de Occ chegue em 0 ou 1:
+            if(occ == 1)
+            {
+                occ = 0.99;
+            }
+
+            else if(occ == 0)
+            {
+                occ = 0.01;
+            }
+
+            c->occupancySonar = occ;
+        }
+    }
 }
 
 void Robot::mappingWithHIMMUsingLaser()
@@ -331,9 +438,6 @@ void Robot::mappingWithHIMMUsingLaser()
     int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
     int robotY=currentPose_.y*scale;
     float robotAngle = currentPose_.theta;  //Teta do robô.
-
-    // TODO: define fixed values of occupancy
-    float locc, lfree;
 
     // how to access a grid cell
     //Cell* c=grid->getCell(robotX,robotY);
