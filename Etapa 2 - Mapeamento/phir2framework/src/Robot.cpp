@@ -346,9 +346,6 @@ void Robot::mappingUsingSonar()
 
     float occUpdate, occ;
 
-    //occUpdate = 0.0;
-    //occ = 0.99;
-
     float R = maxRange;
 
     for(i = minX; i <= maxX; i++)
@@ -396,14 +393,14 @@ void Robot::mappingUsingSonar()
             else if(((base.getKthLaserReading(k)) < maxRange) && (fabs(r - base.getKthLaserReading(k)) < (alpha / 2)))
             {
                 // Regiao I
-                occUpdate = (((R - r) / R) + ((beta - alpha) / beta)) / 2;
+                occUpdate = 0.5 * ((((R - r) / R) + ((beta - alpha) / beta)) / 2) + 0.5;
                 occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
             }
 
             else if(r <= base.getKthLaserReading(k))
             {
                 // Regiao II
-                occUpdate = 1.0 - ((((R - r) / R) + ((beta - alpha) / beta)) / 2);
+                occUpdate = 0.5 * (1.0 - ((((R - r) / R) + ((beta - alpha) / beta)) / 2));
                 occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
             }
 
