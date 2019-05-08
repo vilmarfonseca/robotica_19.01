@@ -316,7 +316,7 @@ void Robot::mappingUsingSonar()
     int scale = grid->getMapScale();// Escala do grid -> indica quantas células correspondem a um metro.
                                     // Por padrão o scale é 10, logo se robô fizer leitura de
                                     // 5m o método deve atualizar uma distância de 50 células.
-    float maxRange = base.getMaxLaserRange(); //Valor em metros, multiplicar por scale para obter em células.
+    float maxRange = base.getMaxSonarRange(); //Valor em metros, multiplicar por scale para obter em células.
     int maxRangeInt = maxRange*scale;
 
     int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
@@ -375,7 +375,7 @@ void Robot::mappingUsingSonar()
             int k = 0;
             // base.getNearestSonarBeam(phi) ou base.getNearestLaserBeam(phi),
             // retornam o índice da medida mais próxima do ângulo phi.
-            k = base.getNearestLaserBeam(phi);
+            k = base.getNearestSonarBeam(phi);
 
             // Atualizar a ocupação da célula como ocupada ou livre dependendo da região do sensor em que se
             // enquadrar.
@@ -385,23 +385,23 @@ void Robot::mappingUsingSonar()
             // verificar se a distância r é próxima ou menor da medida do sensor k, dada pelas funções
             // base.getKthSonarReading(k) ou base.getKthLaserReading(k).
 
-            if((fabs(phi - base.getAngleOfLaserBeam(k)) > beta/2) ||(r > std::min(maxRange, (base.getKthLaserReading(k)+(alpha/2)))))
+            if((fabs(phi - base.getAngleOfSonarBeam(k)) > beta/2) ||(r > std::min(maxRange, (base.getKthSonarReading(k)+(alpha/2)))))
             {
                 // Regiao III
                 occ += 0.0;
             }
-            else if(((base.getKthLaserReading(k)) < maxRange) && (fabs(r - base.getKthLaserReading(k)) < (alpha / 2)))
+            else if(((base.getKthSonarReading(k)) < maxRange) && (fabs(r - base.getKthSonarReading(k)) < (alpha / 2)))
             {
                 // Regiao I
                 occUpdate = 0.5 * ((((R - r) / R) + ((beta - alpha) / beta)) / 2) + 0.5;
-                occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
+                occ = (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
             }
 
-            else if(r <= base.getKthLaserReading(k))
+            else if(r <= base.getKthSonarReading(k))
             {
                 // Regiao II
                 occUpdate = 0.5 * (1.0 - ((((R - r) / R) + ((beta - alpha) / beta)) / 2));
-                occ += (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
+                occ = (occUpdate * occ) / ((occUpdate * occ) + ((1.0 - occUpdate) * (1.0 - occ)));
             }
 
             // Evitar que o valor de Occ chegue em 0 ou 1:
