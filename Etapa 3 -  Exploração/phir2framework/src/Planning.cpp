@@ -1,6 +1,7 @@
 #include "Planning.h"
 
 #include <queue>
+#include <math.h>
 #include <float.h> //DBL_MAX
 
 ////////////////////////
@@ -430,6 +431,7 @@ void Planning::iteratePotentials()
 
     Cell *left,*right,*up,*down;
 
+
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
     //     left  = grid->getCell(i-1,j);
@@ -443,10 +445,18 @@ void Planning::iteratePotentials()
     //                     |                         \                       |
     //  (robotPosition.x-halfWindowSize, robotPosition.y-halfWindowSize)  -------  (robotPosition.y+halfWindowSize, robotPosition.y-halfWindowSize)
 
+    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
+        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
+            if(grid->getCell(i,j)->occType != OCCUPIED){
+                left = grid->getCell(i-1,j);
+                right = grid->getCell(i+1,j);
+                down = grid->getCell(i,j-1);
+                up = grid->getCell(i,j+1);
 
-
-
-
+                c->pot = (left->pot + right->pot + up->pot + down->pot) / 4;
+            }
+        }
+    }
 
 }
 
@@ -458,6 +468,9 @@ void Planning::updateGradient()
     // c->dirX and c->dirY
 
     Cell *left,*right,*up,*down;
+
+    double dirX, dirY;
+    double dirX_normalized, dirY_normalized;
 
     // the gradient of a FREE cell in position (i,j) is computed using the potential of the four adjacent cells
     // where, for example:
@@ -473,11 +486,26 @@ void Planning::updateGradient()
     //  (robotPosition.x-halfWindowSize, robotPosition.y-halfWindowSize)  -------  (robotPosition.y+halfWindowSize, robotPosition.y-halfWindowSize)
 
 
+    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
+        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
+            if(grid->getCell(i,j)->occType == FREE){
+                left = grid->getCell(i-1,j);
+                right = grid->getCell(i+1,j);
+                down = grid->getCell(i,j-1);
+                up = grid->getCell(i,j+1);
 
+                dirX = -(right->pot - left->pot) / 2;
+                dirY = -(up->pot - down->pot) / 2;
 
+                dirX_normalized = dirX / sqrt(pow(dirX,2) + pow(dirY,2));
+                dirY_normalized = dirY / sqrt(pow(dirX,2) + pow(dirY,2));
 
+                c->dirX = dirX;
+                c->dirY = dirY;
 
-
-
-
+            }
+            c->dirX = 0;
+            c->dirY = 0;
+        }
+    }
 }
