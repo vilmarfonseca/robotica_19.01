@@ -144,11 +144,43 @@ void Planning::updateCellsTypes()
     //                     |                         \                       |
     //  (robotPosition.x-maxUpdateRange, robotPosition.y-maxUpdateRange)  -------  (robotPosition.y+maxUpdateRange, robotPosition.y-maxUpdateRange)
 
+    int maxX, maxY, minX, minY = 0;
+    minX = robotPosition.x - maxUpdateRange;
+    minY = robotPosition.y - maxUpdateRange;
+    maxX = robotPosition.x + maxUpdateRange;
+    maxY = robotPosition.y + maxUpdateRange;
 
+    int i, j = 0;
+    for(i = minX; i <= maxX; i++)
+    {
+        for(j = minY; j <= maxY; j++)
+        {
+            c = grid->getCell(i,j);
 
-
-
-
+            if(c->occType == UNEXPLORED)
+            {
+                if(c->logodds > 0.5)
+                {
+                    c->occType = OCCUPIED;
+                }
+                else
+                {
+                    c->occType = FREE;
+                }
+            }
+            else
+            {
+                if(c->logodds >= 0.6)
+                {
+                    c->occType = OCCUPIED;
+                }
+                else if(c->logodds <= 0.4)
+                {
+                    c->occType = FREE;
+                }
+            }
+        }
+    }
 }
 
 void Planning::expandObstacles()
@@ -297,12 +329,42 @@ void Planning::computeHeuristic()
     //                     |                         \                       |
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
+    int i, j = 0;
+    int d = 1000000000;  // Distância da célula para célula_da_fronteira[i]
+    int tempD = 0;
+    Cell *temp, *fcCell;
 
+    for(i = gridLimits.minX; i <= gridLimits.maxX; i++)
+    {
+        for(j = gridLimits.minY; j <= gridLimits.maxY; j++)
+        {
+            c = grid->getCell(i,j);
 
+//          Nas células de objetivo, o valor de c->h será obviamente 0
 
-
-
-
+            if(c->planType == FRONTIER)
+            {
+                c->h = 0;
+            }
+//          Nas demais células, é preciso determinar a distância euclidiana para
+//          a célula de objetivo mais próxima dentre todas em std::vector<Cell*> frontierCenters.
+            else
+            {
+                int size = frontierCenters.size();
+                for(int i = 0; i < size; i++)
+                {
+                    Cell *temp = frontierCenters[i];
+                    tempD = sqrt((((c->x) - (temp->x))^2) + (((c->y) - (temp->y))^2));
+                    if(tempD < d)
+                    {
+                        d = tempD;
+                        fcCell = temp;
+                    }
+                }
+                c->h = d;
+            }
+        }
+    }
 }
 
 // eight neighbors offset
@@ -327,6 +389,8 @@ void Planning::computeAStar()
 {
     Cell* c;
 
+    Cell *left,*right,*up,*down,*NE,*NW,*SE,*SW;
+
     // Priority queue of Cell pointers ordered by key-value c->f
     std::priority_queue<Cell*,std::vector<Cell*>,Compare> pq;
 
@@ -337,10 +401,74 @@ void Planning::computeAStar()
 
     // TODO: implement A-Star
 
+    int i = robotPosition.x;
+    int j = robotPosition.y;
 
+    left = grid->getCell(i-1,j);
+    right = grid->getCell(i+1,j);
+    down = grid->getCell(i,j-1);
+    up = grid->getCell(i,j+1); 
+    NE = grid->getCell(i+1,j+1);
+    NW = grid->getCell(i-1,j+1);
+    SE = grid->getCell(i+1,j-1);
+    SW = grid->getCell(i-1,j-1);
 
+    c->g = 0;
+    pq.push(c);
 
-
+    while (pq.top() != NULL){
+        c = pq.top();
+        if (c != goal){
+            if(left->g == DBL_MAX){
+                left->g = c->g+1;
+                left->f = left->g + left->h;
+                left->pi = c;
+                pq.push(left);
+            }
+            if(right->g == DBL_MAX){
+                right->g = c->g+1;
+                right->f = right->g + right->h;
+                right->pi = c;
+                pq.push(right);
+            }
+            if(up->g == DBL_MAX){
+                up->g = c->g+1;
+                up->f = up->g + up->h;
+                up->pi = c;
+                pq.push(up);
+            }
+            if(down->g == DBL_MAX){
+                down->g = c->g+1;
+                down->f = down->g + down->h;
+                down->pi = c;
+                pq.push(down);
+            }
+            if(NE->g == DBL_MAX){
+                NE->g = c->g+1;
+                NE->f = NE->g + NE->h;
+                NE->pi = c;
+                pq.push(NE);
+            }
+            if(NW->g == DBL_MAX){
+                NW->g = c->g+1;
+                NW->f = NW->g + NW->h;
+                NW->pi = c;
+                pq.push(NW);
+            }
+            if(SE->g == DBL_MAX){
+                SE->g = c->g+1;
+                SE->f = SE->g + SE->h;
+                SE->pi = c;
+                pq.push(SE);
+            }
+            if(SW->g == DBL_MAX){
+                SW->g = c->g+1;
+                SW->f = SW->g + SW->h;
+                SW->pi = c;
+                pq.push(SW);
+            }
+        }
+    }
 }
 
 
