@@ -72,8 +72,9 @@ void Planning::run()
 
     if(!frontierCenters.empty()){
         foundFirstFrontier = true;
-
+        //sleep(5);
         computeHeuristic();
+        //sleep(10);
         computeAStar();
         markPathCells();
         findLocalGoal();
@@ -330,14 +331,17 @@ void Planning::computeHeuristic()
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
     int i, j = 0;
-    int d = 1000000000;  // Distância da célula para célula_da_fronteira[i]
-    int tempD = 0;
-    Cell *temp, *fcCell;
+    float d = FLT_MAX;  // Distância da célula para célula_da_fronteira[i], começa com maior valor int para substituir depois.
+    float tempD = 0.0;
+    Cell *temp;
 
     for(i = gridLimits.minX; i <= gridLimits.maxX; i++)
     {
         for(j = gridLimits.minY; j <= gridLimits.maxY; j++)
         {
+//            std::cout << "i: " << i << " j: " << j << std::endl;
+//            sleep(1);
+
             c = grid->getCell(i,j);
 
 //          Nas células de objetivo, o valor de c->h será obviamente 0
@@ -346,22 +350,31 @@ void Planning::computeHeuristic()
             {
                 c->h = 0;
             }
-//          Nas demais células, é preciso determinar a distância euclidiana para
+//          Nas demais células livres (c->occType == FREE), é preciso determinar a distância euclidiana para
 //          a célula de objetivo mais próxima dentre todas em std::vector<Cell*> frontierCenters.
-            else
+            else if (c->occType == FREE)
             {
+//                std::cout << "--Célula free--" << std::endl;
+//                sleep(4);
+                int k = 0;
                 int size = frontierCenters.size();
-                for(int i = 0; i < size; i++)
+//                std::cout << "Tamanho:" << size << std::endl;
+                for(k = 0; k < size; k++)
                 {
-                    Cell *temp = frontierCenters[i];
-                    tempD = sqrt((((c->x) - (temp->x))^2) + (((c->y) - (temp->y))^2));
+//                    std::cout << "LOOP: " << k << std::endl;
+//                    sleep(4);
+                    temp = frontierCenters[k];
+                    tempD = sqrt(pow(c->x - temp->x , 2.0) + pow(c->y - temp->y , 2.0));
+//                    std::cout << "d:" << d << "tempD:" << tempD << std::endl;
                     if(tempD < d)
                     {
+//                        std::cout << "Entrou if!" << std::endl;
                         d = tempD;
-                        fcCell = temp;
                     }
                 }
+//                std::cout << "k:" << k << std::endl;
                 c->h = d;
+//                std::cout << "HCost:" << c->h << std::endl;
             }
         }
     }
