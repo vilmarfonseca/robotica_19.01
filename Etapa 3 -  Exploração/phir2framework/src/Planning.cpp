@@ -421,6 +421,7 @@ void Planning::computeAStar()
     // Start node.
     start = grid->getCell(x,y);
     start->g = 0;
+
 //    std::cout << "Custo H célula start: " << start->h << std::endl;
 //    std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
 //    sleep(3);
@@ -447,8 +448,7 @@ void Planning::computeAStar()
             // Altera entre os 8 vizinhos
             neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
 //            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
-//            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;
-
+//            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;sss
             // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
             if(neighbor->g == DBL_MAX && goal == NULL)
             {
@@ -477,146 +477,42 @@ void Planning::computeAStar()
     }
 //    sleep(2);
 //    std::cout << "Acabou while AStar." << std::endl;
+    // goal = grid->getCell(3,50);
+
+    // Cell *c1,*c2,*c3,*c4,*c5,*c6,*c7,*c8,*c9,*c10,*c11,*c12,*c13,*c14;
+    
+    // c14 = grid->getCell(5,14);
+    // c13 = grid->getCell(5,13);
+    // c12 = grid->getCell(5,12);
+    // c11 = grid->getCell(5,11);
+    // c10 = grid->getCell(5,10);
+    // c9 = grid->getCell(5,9);
+    // c8 = grid->getCell(5,8);
+    // c7 = grid->getCell(5,7);
+    // c6 = grid->getCell(5,6);
+    // c5 = grid->getCell(5,5);
+    // c4 = grid->getCell(5,4);
+    // c3 = grid->getCell(5,3);
+    // c2 = grid->getCell(5,2);
+    // c1 = grid->getCell(5,1);
+
+    // goal->pi = c14; 
+
+    // c14->pi = c13;
+    // c13->pi = c12;
+    // c12->pi = c11;
+    // c11->pi = c10;
+    // c10->pi = c9;
+    // c9->pi = c8;
+    // c8->pi = c7;
+    // c7->pi = c6;
+    // c6->pi = c5;
+    // c5->pi = c4;
+    // c4->pi = c3;
+    // c3->pi = c2;
+    // c2->pi = c1;
+    
 }
-//    int i = robotPosition.x;
-//    int j = robotPosition.y;
-
-//    c = grid->getCell(i,j);
-
-//    left = grid->getCell(i-1,j);
-//    right = grid->getCell(i+1,j);
-//    down = grid->getCell(i,j-1);
-//    up = grid->getCell(i,j+1);
-//    NE = grid->getCell(i+1,j+1);
-//    NW = grid->getCell(i-1,j+1);
-//    SE = grid->getCell(i+1,j-1);
-//    SW = grid->getCell(i-1,j-1);
-
-//    c->g = 0;
-//    pq.push(c);
-//    std::cout << "Antes if" << std::endl;
-//    sleep(3);
-//    bool frontier = false;
-//    if(!frontier)
-//    {
-//        std::cout << "Entrou if negado" << std::endl;
-//    }
-//    std::cout << "Depois if" << std::endl;
-//    sleep(3);
-
-//    if(frontier)
-//    {
-//        std::cout << "Entrou if positivo" << std::endl;
-//    }
-//    std::cout << "Depois if" << std::endl;
-//    sleep(3);
-
-
-//    while (pq.top() != NULL ||   !frontier)
-//    {
-//        std::cout << "Entrou while AStar." << std::endl;
-//        c = pq.top();
-//        if (c->occType !=FRONTIER)
-//        {
-//            if(left->g == DBL_MAX && !frontier)
-//            {
-//                left->g = c->g+1;
-//                left->f = left->g + left->h;
-//                left->pi = c;
-//                pq.push(left);
-//                if(left->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = left;
-//                }
-//            }
-//            if(right->g == DBL_MAX && !frontier)
-//            {
-//                right->g = c->g+1;
-//                right->f = right->g + right->h;
-//                right->pi = c;
-//                pq.push(right);
-//                if(right->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = right;
-//                }
-//            }
-//            if(up->g == DBL_MAX && !frontier)
-//            {
-//                up->g = c->g+1;
-//                up->f = up->g + up->h;
-//                up->pi = c;
-//                pq.push(up);
-//                if(up->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = up;
-//                }
-//            }
-//            if(down->g == DBL_MAX && !frontier)
-//            {
-//                down->g = c->g+1;
-//                down->f = down->g + down->h;
-//                down->pi = c;
-//                pq.push(down);
-//                if(down->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = down;
-//                }
-//            }
-//            if(NE->g == DBL_MAX && !frontier)
-//            {
-//                NE->g = c->g+1;
-//                NE->f = NE->g + NE->h;
-//                NE->pi = c;
-//                pq.push(NE);
-//                if(NE->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = NE;
-//                }
-//            }
-//            if(NW->g == DBL_MAX && !frontier)
-//            {
-//                NW->g = c->g+1;
-//                NW->f = NW->g + NW->h;
-//                NW->pi = c;
-//                pq.push(NW);
-//                if(NW->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = NW;
-//                }
-//            }
-//            if(SE->g == DBL_MAX && !frontier)
-//            {
-//                SE->g = c->g+1;
-//                SE->f = SE->g + SE->h;
-//                SE->pi = c;
-//                pq.push(SE);
-//                if(SE->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = SE;
-//                }
-//            }
-//            if(SW->g == DBL_MAX && !frontier)
-//            {
-//                SW->g = c->g+1;
-//                SW->f = SW->g + SW->h;
-//                SW->pi = c;
-//                pq.push(SW);
-//                if(SW->planType == FRONTIER)
-//                {
-//                    frontier = true;
-//                    goal = SW;
-//                }
-//            }
-//        }
-//    }
-
 
 void Planning::markPathCells()
 {
@@ -684,7 +580,6 @@ void Planning::initializePotentials()
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
             c = grid->getCell(i,j);
-
             if(c->occType == OCCUPIED || c->occType == NEAROBSTACLE)
                 c->pot = 1.0;
         }
@@ -704,11 +599,6 @@ void Planning::iteratePotentials()
 
     Cell *left,*right,*up,*down;
 
-    int pos_x = robotPosition.x;
-    int pos_y = robotPosition.y;
-
-    c = grid->getCell(pos_x,pos_y);
-
 
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
@@ -725,10 +615,8 @@ void Planning::iteratePotentials()
 
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
-            if(c->planType == LOCALGOAL){
-                c->pot = 0;
-            }
-            else if(c->occType == FREE || c->occType == UNEXPLORED){
+            c = grid->getCell(i,j);
+            if(c->occType == FREE || c->occType == UNEXPLORED){
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
                 down = grid->getCell(i,j-1);
@@ -736,6 +624,8 @@ void Planning::iteratePotentials()
 
                 c->pot = (left->pot + right->pot + up->pot + down->pot) / 4;
             }
+            else 
+                c->pot = 1;
         }
     }
 
@@ -749,11 +639,6 @@ void Planning::updateGradient()
     // c->dirX and c->dirY
 
     Cell *left,*right,*up,*down;
-
-    int pos_x = robotPosition.x;
-    int pos_y = robotPosition.y;
-
-    c = grid->getCell(pos_x,pos_y);
 
     double dirX, dirY;
     double dirX_normalized, dirY_normalized;
@@ -774,6 +659,7 @@ void Planning::updateGradient()
 
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
+            c = grid->getCell(i,j);
             if(c->occType == FREE){
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
@@ -786,8 +672,8 @@ void Planning::updateGradient()
                 dirX_normalized = dirX / sqrt(pow(dirX,2) + pow(dirY,2));
                 dirY_normalized = dirY / sqrt(pow(dirX,2) + pow(dirY,2));
 
-                c->dirX = 0;
-                c->dirY = 1;
+                c->dirX = dirX_normalized;
+                c->dirY = dirY_normalized;
             }
             else {
                 c->dirX = 0;
