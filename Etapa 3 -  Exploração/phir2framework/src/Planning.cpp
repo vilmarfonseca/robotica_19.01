@@ -350,6 +350,8 @@ void Planning::computeHeuristic()
             if(c->planType == FRONTIER)
             {
                 c->h = 0;
+                std::cout << "Célula objetivo: " << c->x << "," << c->y << std::endl;
+                sleep(3);
             }
 //          Nas demais células livres (c->occType == FREE), é preciso determinar a distância euclidiana para
 //          a célula de objetivo mais próxima dentre todas em std::vector<Cell*> frontierCenters.
@@ -421,7 +423,7 @@ void Planning::computeAStar()
     int y = robotPosition.y;
     // Start node.
     start = grid->getCell(x,y);
-    //start->g = start->f = 0;
+    start->g = start->f = 0;
     std::cout << "Custo H célula start: " << start->h << std::endl;
     std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
     sleep(3);
@@ -440,17 +442,16 @@ void Planning::computeAStar()
         int i = 0;
         for(i = 0; i <= 7; i++)
         {
-            std::cout << "For dos vizinhos." << std::endl;
-            sleep(2);
             // Altera entre os 8 vizinhos
             neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
-            std::cout << "Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
+            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
+            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;
             sleep(2);
 
             // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
             if(neighbor->g == DBL_MAX) //&& goal == NULL)
             {
-                std::cout << "Definindo vizinho." << std::endl;
+                std::cout << "[IF]Definindo vizinho." << std::endl;
                 neighbor->g = c->g + cost[i];
                 neighbor->f = neighbor->g + neighbor->h;
                 neighbor->pi = c;
@@ -459,12 +460,13 @@ void Planning::computeAStar()
                 // ser setada como objetivo, i.ie. fazer goal = c.
                 if(neighbor->planType == FRONTIER)
                 {
-                    std::cout << "Definindo goal." << std::endl;
+                    std::cout << "[IF-FRONTIER]Definindo goal." << std::endl;
                     goal = neighbor;
                 }
                 else
                 {
                     // Depois de atualizar o neighbor, inserí-lo na priority queue.
+                    std::cout << "[ELSE]Insere vizinho na pq." << std::endl;
                     pq.push(neighbor);
                 }
             }
