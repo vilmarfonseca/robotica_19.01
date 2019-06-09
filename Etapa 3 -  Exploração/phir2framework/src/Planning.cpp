@@ -9,7 +9,7 @@
 /// Métodos Públicos ///
 ///                  ///
 ////////////////////////
-
+    int temp_var =0;
 Planning::Planning()
 {
     curPref = 0.0;
@@ -21,7 +21,7 @@ Planning::Planning()
     newGridLimits.maxX = newGridLimits.maxY = -1000;
 
     halfWindowSize = 30;
-    localGoalRadius = 20;
+    localGoalRadius = 100;
 
     goal = NULL;
     localGoal = NULL;
@@ -76,6 +76,7 @@ void Planning::run()
         computeHeuristic();
         //sleep(10);
         computeAStar();
+        std::cout << "ACABOU A ESTRELA" << std::endl;
         markPathCells();
         findLocalGoal();
 
@@ -400,9 +401,11 @@ public:
 
 void Planning::computeAStar()
 {
-    Cell* c;
-
-    Cell *left,*right,*up,*down,*NE,*NW,*SE,*SW;
+    std::cout << "Entrou para computar o AStar." << std::endl;
+    Cell *c;
+    Cell *neighbor;
+    Cell *start;
+//    Cell *left,*right,*up,*down,*NE,*NW,*SE,*SW;
 
     // Priority queue of Cell pointers ordered by key-value c->f
     std::priority_queue<Cell*,std::vector<Cell*>,Compare> pq;
@@ -414,75 +417,202 @@ void Planning::computeAStar()
 
     // TODO: implement A-Star
 
-    int i = robotPosition.x;
-    int j = robotPosition.y;
+    int x = robotPosition.x;
+    int y = robotPosition.y;
+    // Start node.
+    start = grid->getCell(x,y);
+    //start->g = start->f = 0;
+    std::cout << "Custo H célula start: " << start->h << std::endl;
+    std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
+    sleep(3);
 
-    left = grid->getCell(i-1,j);
-    right = grid->getCell(i+1,j);
-    down = grid->getCell(i,j-1);
-    up = grid->getCell(i,j+1); 
-    NE = grid->getCell(i+1,j+1);
-    NW = grid->getCell(i-1,j+1);
-    SE = grid->getCell(i+1,j-1);
-    SW = grid->getCell(i-1,j-1);
+    // Coloca nodo start na fila.
+    pq.push(start);
 
-    c->g = 0;
-    pq.push(c);
-
-    while (pq.top() != NULL){
+    // Loop para achar o caminho.
+    while(pq.top() != NULL || goal == NULL)
+    {
+        std::cout << "While AStar." << std::endl;
+        // Pegar primeiro nodo da priority queue.
         c = pq.top();
-        if (c != goal){
-            if(left->g == DBL_MAX){
-                left->g = c->g+1;
-                left->f = left->g + left->h;
-                left->pi = c;
-                pq.push(left);
+
+        // Analisar seus vizinhos.
+        int i = 0;
+        for(i = 0; i <= 7; i++)
+        {
+            std::cout << "For dos vizinhos." << std::endl;
+            sleep(2);
+            // Altera entre os 8 vizinhos
+            neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
+            std::cout << "Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
+            sleep(2);
+
+            // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
+            if(neighbor->g == DBL_MAX) //&& goal == NULL)
+            {
+                std::cout << "Definindo vizinho." << std::endl;
+                neighbor->g = c->g + cost[i];
+                neighbor->f = neighbor->g + neighbor->h;
+                neighbor->pi = c;
+                // A busca do menor caminho deve ser propagada adicionando células vizinhas na fila ATÉ que se encontre
+                // uma célula de fronteira (i.e. até achar uma célula onde c->planType == FRONTIER). Esta célula deve
+                // ser setada como objetivo, i.ie. fazer goal = c.
+                if(neighbor->planType == FRONTIER)
+                {
+                    std::cout << "Definindo goal." << std::endl;
+                    goal = neighbor;
+                }
+                else
+                {
+                    // Depois de atualizar o neighbor, inserí-lo na priority queue.
+                    pq.push(neighbor);
+                }
             }
-            if(right->g == DBL_MAX){
-                right->g = c->g+1;
-                right->f = right->g + right->h;
-                right->pi = c;
-                pq.push(right);
-            }
-            if(up->g == DBL_MAX){
-                up->g = c->g+1;
-                up->f = up->g + up->h;
-                up->pi = c;
-                pq.push(up);
-            }
-            if(down->g == DBL_MAX){
-                down->g = c->g+1;
-                down->f = down->g + down->h;
-                down->pi = c;
-                pq.push(down);
-            }
-            if(NE->g == DBL_MAX){
-                NE->g = c->g+1;
-                NE->f = NE->g + NE->h;
-                NE->pi = c;
-                pq.push(NE);
-            }
-            if(NW->g == DBL_MAX){
-                NW->g = c->g+1;
-                NW->f = NW->g + NW->h;
-                NW->pi = c;
-                pq.push(NW);
-            }
-            if(SE->g == DBL_MAX){
-                SE->g = c->g+1;
-                SE->f = SE->g + SE->h;
-                SE->pi = c;
-                pq.push(SE);
-            }
-            if(SW->g == DBL_MAX){
-                SW->g = c->g+1;
-                SW->f = SW->g + SW->h;
-                SW->pi = c;
-                pq.push(SW);
-            }
+            std::cout << "Numero de iterações do i: " << i << std::endl;
         }
     }
+    sleep(2);
+    std::cout << "Acabou while AStar." << std::endl;
+    sleep(2);
 }
+//    int i = robotPosition.x;
+//    int j = robotPosition.y;
+
+//    c = grid->getCell(i,j);
+
+//    left = grid->getCell(i-1,j);
+//    right = grid->getCell(i+1,j);
+//    down = grid->getCell(i,j-1);
+//    up = grid->getCell(i,j+1);
+//    NE = grid->getCell(i+1,j+1);
+//    NW = grid->getCell(i-1,j+1);
+//    SE = grid->getCell(i+1,j-1);
+//    SW = grid->getCell(i-1,j-1);
+
+//    c->g = 0;
+//    pq.push(c);
+//    std::cout << "Antes if" << std::endl;
+//    sleep(3);
+//    bool frontier = false;
+//    if(!frontier)
+//    {
+//        std::cout << "Entrou if negado" << std::endl;
+//    }
+//    std::cout << "Depois if" << std::endl;
+//    sleep(3);
+
+//    if(frontier)
+//    {
+//        std::cout << "Entrou if positivo" << std::endl;
+//    }
+//    std::cout << "Depois if" << std::endl;
+//    sleep(3);
+
+
+//    while (pq.top() != NULL ||   !frontier)
+//    {
+//        std::cout << "Entrou while AStar." << std::endl;
+//        c = pq.top();
+//        if (c->occType !=FRONTIER)
+//        {
+//            if(left->g == DBL_MAX && !frontier)
+//            {
+//                left->g = c->g+1;
+//                left->f = left->g + left->h;
+//                left->pi = c;
+//                pq.push(left);
+//                if(left->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = left;
+//                }
+//            }
+//            if(right->g == DBL_MAX && !frontier)
+//            {
+//                right->g = c->g+1;
+//                right->f = right->g + right->h;
+//                right->pi = c;
+//                pq.push(right);
+//                if(right->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = right;
+//                }
+//            }
+//            if(up->g == DBL_MAX && !frontier)
+//            {
+//                up->g = c->g+1;
+//                up->f = up->g + up->h;
+//                up->pi = c;
+//                pq.push(up);
+//                if(up->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = up;
+//                }
+//            }
+//            if(down->g == DBL_MAX && !frontier)
+//            {
+//                down->g = c->g+1;
+//                down->f = down->g + down->h;
+//                down->pi = c;
+//                pq.push(down);
+//                if(down->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = down;
+//                }
+//            }
+//            if(NE->g == DBL_MAX && !frontier)
+//            {
+//                NE->g = c->g+1;
+//                NE->f = NE->g + NE->h;
+//                NE->pi = c;
+//                pq.push(NE);
+//                if(NE->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = NE;
+//                }
+//            }
+//            if(NW->g == DBL_MAX && !frontier)
+//            {
+//                NW->g = c->g+1;
+//                NW->f = NW->g + NW->h;
+//                NW->pi = c;
+//                pq.push(NW);
+//                if(NW->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = NW;
+//                }
+//            }
+//            if(SE->g == DBL_MAX && !frontier)
+//            {
+//                SE->g = c->g+1;
+//                SE->f = SE->g + SE->h;
+//                SE->pi = c;
+//                pq.push(SE);
+//                if(SE->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = SE;
+//                }
+//            }
+//            if(SW->g == DBL_MAX && !frontier)
+//            {
+//                SW->g = c->g+1;
+//                SW->f = SW->g + SW->h;
+//                SW->pi = c;
+//                pq.push(SW);
+//                if(SW->planType == FRONTIER)
+//                {
+//                    frontier = true;
+//                    goal = SW;
+//                }
+//            }
+//        }
+//    }
 
 
 void Planning::markPathCells()
@@ -509,7 +639,6 @@ void Planning::findLocalGoal()
         }
         c = c->pi;
     }
-
     localGoal->planType = LOCALGOAL;
 }
 
@@ -572,6 +701,11 @@ void Planning::iteratePotentials()
 
     Cell *left,*right,*up,*down;
 
+    int pos_x = robotPosition.x;
+    int pos_y = robotPosition.y;
+
+    c = grid->getCell(pos_x,pos_y);
+
 
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
@@ -588,7 +722,10 @@ void Planning::iteratePotentials()
 
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
-            if(grid->getCell(i,j)->occType != OCCUPIED){
+            if(c->planType == LOCALGOAL){
+                c->pot = 0;
+            }
+            else if(c->occType == FREE || c->occType == UNEXPLORED){
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
                 down = grid->getCell(i,j-1);
@@ -610,6 +747,11 @@ void Planning::updateGradient()
 
     Cell *left,*right,*up,*down;
 
+    int pos_x = robotPosition.x;
+    int pos_y = robotPosition.y;
+
+    c = grid->getCell(pos_x,pos_y);
+
     double dirX, dirY;
     double dirX_normalized, dirY_normalized;
 
@@ -629,7 +771,7 @@ void Planning::updateGradient()
 
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
-            if(grid->getCell(i,j)->occType == FREE){
+            if(c->occType == FREE){
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
                 down = grid->getCell(i,j-1);
@@ -641,12 +783,13 @@ void Planning::updateGradient()
                 dirX_normalized = dirX / sqrt(pow(dirX,2) + pow(dirY,2));
                 dirY_normalized = dirY / sqrt(pow(dirX,2) + pow(dirY,2));
 
-                c->dirX = dirX;
-                c->dirY = dirY;
-
+                c->dirX = dirX_normalized;
+                c->dirY = dirY_normalized;
             }
-            c->dirX = 0;
-            c->dirY = 0;
+            else {
+                c->dirX = 0;
+                c->dirY = 0;
+            }
         }
     }
 }
