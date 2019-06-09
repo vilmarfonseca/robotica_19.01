@@ -72,11 +72,8 @@ void Planning::run()
 
     if(!frontierCenters.empty()){
         foundFirstFrontier = true;
-        //sleep(5);
         computeHeuristic();
-        //sleep(10);
         computeAStar();
-        std::cout << "ACABOU A ESTRELA" << std::endl;
         markPathCells();
         findLocalGoal();
 
@@ -350,8 +347,8 @@ void Planning::computeHeuristic()
             if(c->planType == FRONTIER)
             {
                 c->h = 0;
-                std::cout << "Célula objetivo: " << c->x << "," << c->y << std::endl;
-                sleep(3);
+//                std::cout << "Célula objetivo: " << c->x << "," << c->y << std::endl;
+//                sleep(3);
             }
 //          Nas demais células livres (c->occType == FREE), é preciso determinar a distância euclidiana para
 //          a célula de objetivo mais próxima dentre todas em std::vector<Cell*> frontierCenters.
@@ -423,20 +420,25 @@ void Planning::computeAStar()
     int y = robotPosition.y;
     // Start node.
     start = grid->getCell(x,y);
-    start->g = start->f = 0;
-    std::cout << "Custo H célula start: " << start->h << std::endl;
-    std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
-    sleep(3);
+    start->g = 0;
+//    std::cout << "Custo H célula start: " << start->h << std::endl;
+//    std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
+//    sleep(3);
 
     // Coloca nodo start na fila.
     pq.push(start);
 
     // Loop para achar o caminho.
-    while(pq.top() != NULL || goal == NULL)
+    while(pq.top() != NULL && goal == NULL)
     {
-        std::cout << "While AStar." << std::endl;
+        //sleep(4);
+//        std::cout << "------------While AStar------------" << std::endl;
         // Pegar primeiro nodo da priority queue.
         c = pq.top();
+//        std::cout << "[WHILE]Célula c a ser analisado: (" << c->x << "," << c->y << ")" << std::endl;
+
+        // Como nodo já foi analisado, removê-lo da priority queue.
+        pq.pop();
 
         // Analisar seus vizinhos.
         int i = 0;
@@ -444,38 +446,37 @@ void Planning::computeAStar()
         {
             // Altera entre os 8 vizinhos
             neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
-            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
-            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;
-            sleep(2);
+//            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
+//            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;
 
             // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
-            if(neighbor->g == DBL_MAX) //&& goal == NULL)
+            if(neighbor->g == DBL_MAX && goal == NULL)
             {
-                std::cout << "[IF]Definindo vizinho." << std::endl;
+//                std::cout << "[IF]Definindo vizinho." << std::endl;
                 neighbor->g = c->g + cost[i];
                 neighbor->f = neighbor->g + neighbor->h;
                 neighbor->pi = c;
+//                std::cout << "[IF]Vizinho custo F." << neighbor->f << std::endl;
                 // A busca do menor caminho deve ser propagada adicionando células vizinhas na fila ATÉ que se encontre
                 // uma célula de fronteira (i.e. até achar uma célula onde c->planType == FRONTIER). Esta célula deve
                 // ser setada como objetivo, i.ie. fazer goal = c.
                 if(neighbor->planType == FRONTIER)
                 {
-                    std::cout << "[IF-FRONTIER]Definindo goal." << std::endl;
+//                    std::cout << "[IF-FRONTIER]Definindo goal." << std::endl;
                     goal = neighbor;
                 }
                 else
                 {
                     // Depois de atualizar o neighbor, inserí-lo na priority queue.
-                    std::cout << "[ELSE]Insere vizinho na pq." << std::endl;
+//                    std::cout << "[ELSE]Insere vizinho na pq." << std::endl;
                     pq.push(neighbor);
                 }
             }
-            std::cout << "Numero de iterações do i: " << i << std::endl;
+//            std::cout << "Numero de iterações do i: " << i << std::endl;
         }
     }
-    sleep(2);
-    std::cout << "Acabou while AStar." << std::endl;
-    sleep(2);
+//    sleep(2);
+//    std::cout << "Acabou while AStar." << std::endl;
 }
 //    int i = robotPosition.x;
 //    int j = robotPosition.y;
@@ -785,8 +786,8 @@ void Planning::updateGradient()
                 dirX_normalized = dirX / sqrt(pow(dirX,2) + pow(dirY,2));
                 dirY_normalized = dirY / sqrt(pow(dirX,2) + pow(dirY,2));
 
-                c->dirX = dirX_normalized;
-                c->dirY = dirY_normalized;
+                c->dirX = 0;
+                c->dirY = 1;
             }
             else {
                 c->dirX = 0;
