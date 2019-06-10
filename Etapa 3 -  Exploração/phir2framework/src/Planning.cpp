@@ -21,7 +21,7 @@ Planning::Planning()
     newGridLimits.maxX = newGridLimits.maxY = -1000;
 
     halfWindowSize = 30;
-    localGoalRadius = 100;
+    localGoalRadius = 20;
 
     goal = NULL;
     localGoal = NULL;
@@ -74,6 +74,7 @@ void Planning::run()
         foundFirstFrontier = true;
         computeHeuristic();
         computeAStar();
+//        std::cout << "Saiu AStar.";
         markPathCells();
         findLocalGoal();
 
@@ -404,10 +405,11 @@ void Planning::computeAStar()
     Cell *c;
     Cell *neighbor;
     Cell *start;
-//    Cell *left,*right,*up,*down,*NE,*NW,*SE,*SW;
 
     // Priority queue of Cell pointers ordered by key-value c->f
     std::priority_queue<Cell*,std::vector<Cell*>,Compare> pq;
+    //std::priority_queue<Cell*,std::vector<Cell*>,Compare> empty;
+
 
     // pq.push(c)   -- to insert cell in queue
     // c = pq.top() -- to get top cell (the one with the smallest f value)
@@ -420,8 +422,7 @@ void Planning::computeAStar()
     int y = robotPosition.y;
     // Start node.
     start = grid->getCell(x,y);
-    start->g = 0;
-
+    start->g = start->f = 0;
 //    std::cout << "Custo H célula start: " << start->h << std::endl;
 //    std::cout << "Posição start: (" << start->x << "," << start->y << ")" << std::endl;
 //    sleep(3);
@@ -446,72 +447,46 @@ void Planning::computeAStar()
         for(i = 0; i <= 7; i++)
         {
             // Altera entre os 8 vizinhos
-            neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
-//            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
-//            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;sss
-            // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
-            if(neighbor->g == DBL_MAX && goal == NULL)
-            {
-//                std::cout << "[IF]Definindo vizinho." << std::endl;
-                neighbor->g = c->g + cost[i];
-                neighbor->f = neighbor->g + neighbor->h;
-                neighbor->pi = c;
-//                std::cout << "[IF]Vizinho custo F." << neighbor->f << std::endl;
-                // A busca do menor caminho deve ser propagada adicionando células vizinhas na fila ATÉ que se encontre
-                // uma célula de fronteira (i.e. até achar uma célula onde c->planType == FRONTIER). Esta célula deve
-                // ser setada como objetivo, i.ie. fazer goal = c.
-                if(neighbor->planType == FRONTIER)
+//            if((c->x+offset[i][0] <= gridLimits.maxX) && (c->x+offset[i][0] >= gridLimits.minX) && (c->y+offset[i][1] <= gridLimits.maxY) && (c->y+offset[i][1] >= gridLimits.minY))
+//            {
+                neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
+                if(neighbor->f == DBL_MAX && goal == NULL)
                 {
-//                    std::cout << "[IF-FRONTIER]Definindo goal." << std::endl;
-                    goal = neighbor;
-                }
-                else
-                {
-                    // Depois de atualizar o neighbor, inserí-lo na priority queue.
-//                    std::cout << "[ELSE]Insere vizinho na pq." << std::endl;
-                    pq.push(neighbor);
-                }
+                    //std::cout << "[IF]Definindo vizinho." << std::endl;
+                    neighbor->g = c->g + cost[i];
+                    neighbor->f = neighbor->g + neighbor->h;
+                    neighbor->pi = c;
+    //                std::cout << "[IF]Vizinho custo F." << neighbor->f << std::endl;
+                    // A busca do menor caminho deve ser propagada adicionando células vizinhas na fila ATÉ que se encontre
+                    // uma célula de fronteira (i.e. até achar uma célula onde c->planType == FRONTIER). Esta célula deve
+                    // ser setada como objetivo, i.ie. fazer goal = c.
+                    if(neighbor->planType == FRONTIER)
+                    {
+//                        std::cout << "[IF-FRONTIER]Definindo goal." << std::endl;
+                        goal = neighbor;
+                    }
+                    else
+                    {
+                        // Depois de atualizar o neighbor, inserí-lo na priority queue.
+    //                    std::cout << "[ELSE]Insere vizinho na pq." << std::endl;
+                        pq.push(neighbor);
+                    }
+//                }
             }
+
+//            std::cout << "[FOR]Vizinho a ser analisado: (" << neighbor->x << "," << neighbor->y << ")" << std::endl;
+//            std::cout << "[FOR]Custo G = " << neighbor->g << std::endl;
+
+            // Se neighbor ainda não foi setado anteriormente, atualizar suas informações.
+
 //            std::cout << "Numero de iterações do i: " << i << std::endl;
         }
     }
+//    pq = std::priority_queue<Cell*,std::vector<Cell*>,Compare>();
+//    std::swap(pq,empty);
+
 //    sleep(2);
 //    std::cout << "Acabou while AStar." << std::endl;
-    // goal = grid->getCell(3,50);
-
-    // Cell *c1,*c2,*c3,*c4,*c5,*c6,*c7,*c8,*c9,*c10,*c11,*c12,*c13,*c14;
-    
-    // c14 = grid->getCell(5,14);
-    // c13 = grid->getCell(5,13);
-    // c12 = grid->getCell(5,12);
-    // c11 = grid->getCell(5,11);
-    // c10 = grid->getCell(5,10);
-    // c9 = grid->getCell(5,9);
-    // c8 = grid->getCell(5,8);
-    // c7 = grid->getCell(5,7);
-    // c6 = grid->getCell(5,6);
-    // c5 = grid->getCell(5,5);
-    // c4 = grid->getCell(5,4);
-    // c3 = grid->getCell(5,3);
-    // c2 = grid->getCell(5,2);
-    // c1 = grid->getCell(5,1);
-
-    // goal->pi = c14; 
-
-    // c14->pi = c13;
-    // c13->pi = c12;
-    // c12->pi = c11;
-    // c11->pi = c10;
-    // c10->pi = c9;
-    // c9->pi = c8;
-    // c8->pi = c7;
-    // c7->pi = c6;
-    // c6->pi = c5;
-    // c5->pi = c4;
-    // c4->pi = c3;
-    // c3->pi = c2;
-    // c2->pi = c1;
-    
 }
 
 void Planning::markPathCells()
@@ -580,6 +555,7 @@ void Planning::initializePotentials()
     for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
         for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
             c = grid->getCell(i,j);
+
             if(c->occType == OCCUPIED || c->occType == NEAROBSTACLE)
                 c->pot = 1.0;
         }
@@ -600,6 +576,7 @@ void Planning::iteratePotentials()
     Cell *left,*right,*up,*down;
 
 
+
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
     //     left  = grid->getCell(i-1,j);
@@ -613,10 +590,17 @@ void Planning::iteratePotentials()
     //                     |                         \                       |
     //  (robotPosition.x-halfWindowSize, robotPosition.y-halfWindowSize)  -------  (robotPosition.y+halfWindowSize, robotPosition.y-halfWindowSize)
 
-    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
-        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
+    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++)
+    {
+        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++)
+        {
             c = grid->getCell(i,j);
-            if(c->occType == FREE || c->occType == UNEXPLORED){
+            if(c->planType == LOCALGOAL)
+            {
+                c->pot = 0;
+            }
+            else if(c->occType == FREE || c->occType == UNEXPLORED)
+            {
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
                 down = grid->getCell(i,j-1);
@@ -624,8 +608,6 @@ void Planning::iteratePotentials()
 
                 c->pot = (left->pot + right->pot + up->pot + down->pot) / 4;
             }
-            else 
-                c->pot = 1;
         }
     }
 
@@ -657,10 +639,13 @@ void Planning::updateGradient()
     //  (robotPosition.x-halfWindowSize, robotPosition.y-halfWindowSize)  -------  (robotPosition.y+halfWindowSize, robotPosition.y-halfWindowSize)
 
 
-    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++){
-        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++){
+    for(int i=robotPosition.x-halfWindowSize;i<=robotPosition.x+halfWindowSize;i++)
+    {
+        for(int j=robotPosition.y-halfWindowSize;j<=robotPosition.y+halfWindowSize;j++)
+        {
             c = grid->getCell(i,j);
-            if(c->occType == FREE){
+            if(c->occType == FREE)
+            {
                 left = grid->getCell(i-1,j);
                 right = grid->getCell(i+1,j);
                 down = grid->getCell(i,j-1);
@@ -675,7 +660,8 @@ void Planning::updateGradient()
                 c->dirX = dirX_normalized;
                 c->dirY = dirY_normalized;
             }
-            else {
+            else
+            {
                 c->dirX = 0;
                 c->dirY = 0;
             }
