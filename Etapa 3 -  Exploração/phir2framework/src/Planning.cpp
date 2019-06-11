@@ -159,22 +159,22 @@ void Planning::updateCellsTypes()
 
             if(c->occType == UNEXPLORED)
             {
-                if(c->logodds > 0.5)
+                if(c->occupancy > 0.6)
                 {
                     c->occType = OCCUPIED;
                 }
-                else
+                else if(c->occupancy <= 0.4)
                 {
                     c->occType = FREE;
                 }
             }
             else
             {
-                if(c->logodds >= 0.6)
+                if(c->occupancy >= 0.6)
                 {
                     c->occType = OCCUPIED;
                 }
-                else if(c->logodds <= 0.4)
+                else if(c->occupancy <= 0.4)
                 {
                     c->occType = FREE;
                 }
