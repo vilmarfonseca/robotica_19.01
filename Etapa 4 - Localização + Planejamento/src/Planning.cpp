@@ -1,7 +1,6 @@
 #include "Planning.h"
 
 #include <queue>
-#include <math.h>
 #include <float.h> //DBL_MAX
 
 ////////////////////////
@@ -9,7 +8,7 @@
 /// Métodos Públicos ///
 ///                  ///
 ////////////////////////
-    int temp_var =0;
+
 Planning::Planning()
 {
     curPref = 0.0;
@@ -53,6 +52,12 @@ void Planning::setNewRobotPose(Pose p)
     newGridLimits.maxY = std::max(newGridLimits.maxY,newRobotPosition.y+maxUpdateRange);
 }
 
+void Planning::setGoalPose(Pose p)
+{
+    goalPose->x = p.x;
+    goalPose->y = p.y;
+}
+
 void Planning::run()
 {
     pthread_mutex_lock(grid->mutex);
@@ -69,30 +74,22 @@ void Planning::run()
 
     pthread_mutex_unlock(grid->mutex);
 
+    // TODO: define motion planning strategy
 
-    if(!frontierCenters.empty()){
-        foundFirstFrontier = true;
-        computeHeuristic();
-        computeAStar();
-//        std::cout << "Saiu AStar.";
-        markPathCells();
-        findLocalGoal();
 
-    }else{
-        // don't have any frontiers remaining
 
-        if(foundFirstFrontier){
-            localGoal = NULL;
-            std::cout << "EXPLORATION COMPLETE!" << std::endl;
-        }
-    }
 
-    initializePotentials();
 
-    for(int i=0; i<100; i++)
-        iteratePotentials();
 
-    updateGradient();
+
+
+
+
+
+
+
+
+
 
 
 }
@@ -114,16 +111,8 @@ void Planning::resetCellsTypes()
                 c->occType = FREE;
 
             c->planType = REGULAR;
-
-            c->g = DBL_MAX;
-            c->h = DBL_MAX;
-            c->f = DBL_MAX;
-            c->pi = NULL;
         }
     }
-
-    goal = NULL;
-    localGoal = NULL;
 }
 
 void Planning::updateCellsTypes()
@@ -304,12 +293,18 @@ void Planning::detectFrontiers()
     }
 
 
-    std::cout << "Number of frontiers: " << frontierCenters.size() << std::endl;
+//    std::cout << "Number of frontiers: " << frontierCenters.size() << std::endl;
     for(int k=0;k<frontierCenters.size();k++){
         frontierCenters[k]->planType = FRONTIER;
     }
 
 }
+
+//////////////////////////////////////////////////////
+///                                                ///
+/// Métodos para planejamento de caminhos - A-STAR ///
+///                                                ///
+//////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////
 ///                                                ///
@@ -474,9 +469,9 @@ void Planning::findLocalGoal()
         }
         c = c->pi;
     }
+
     localGoal->planType = LOCALGOAL;
 }
-
 
 ///////////////////////////////////////////////////
 ///                                             ///
@@ -536,8 +531,6 @@ void Planning::iteratePotentials()
 
     Cell *left,*right,*up,*down;
 
-
-
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
     //     left  = grid->getCell(i-1,j);
@@ -571,7 +564,6 @@ void Planning::iteratePotentials()
             }
         }
     }
-
 }
 
 void Planning::updateGradient()
