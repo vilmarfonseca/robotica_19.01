@@ -18,7 +18,7 @@ MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     scale = 10;
     transparency = false;
 
-    numParticles = 10000;
+    numParticles = 10;
 
     initParticles();
 }
@@ -48,23 +48,42 @@ void MCL::sampling(const Action &u)
     /// Seguindo o modelo de Thrun, devemos gerar 3 distribuicoes normais, uma para cada componente da odometria
 
     /// Para definir uma distribuição normal X de media M e variancia V, pode-se usar:
-    // std::normal_distribution<double> samplerX(M,V);
+    std::normal_distribution<double> normalDistRot1(0,u.rot1);
+    std::normal_distribution<double> normalDistTrans(0,u.trans);
+    std::normal_distribution<double> normalDistRot2(0,u.rot2);
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
-    // double amostra = samplerX(*generator)
+    double amostraRot1 = normalDistRot1(*generator);
+    double amostraTrans = normalDistTrans(*generator);
+    double amostraRot2 = normalDistRot2(*generator);
     /// onde *generator é um gerador de numeros aleatorios (definido no construtor da classe)
+    for(int i = 0; i < numParticles; i++)
+    {
+        particles[i].p.x += amostraRot1;
+        particles[i].p.y += amostraTrans;
+        particles[i].p.theta += amostraRot2;
+    }
 
 
 }
 
 void MCL::weighting(const std::vector<float> &z)
 {
-    /// TODO: faça a pesagem de todas as particulas
 
-    /// 1: elimine particulas fora do espaco livre
+    for(int i = 0; i < numParticles; i++)
+    {
+         /// 1: elimine particulas fora do espaco livre
+        if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
+        {
+            particles[i].w = 0;
+        }
 
-    /// 2: compare as observacoes da particula com as observacoes z do robo
-    // Use a funcao computeExpectedMeasurement(k, particles[i].p)
-    // para achar a k-th observacao esperada da particula i
+        /// 2: compare as observacoes da particula com as observacoes z do robo
+        // Use a funcao computeExpectedMeasurement(k, particles[i].p)
+        // para achar a k-th observacao esperada da particula i
+    }
+
+
+
 
 
     /// 3: normalize os pesos
@@ -75,6 +94,7 @@ void MCL::resampling()
 {
     // gere uma nova geração de particulas com o mesmo tamanho do conjunto atual
     std::vector<MCLparticle> nextGeneration;
+    //nextGeneration.resize(numParticles);
 
     /// TODO: Implemente o Low Variance Resampling
 
