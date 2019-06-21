@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+//#include <cmath>
 
 #include <GL/glut.h>
 
@@ -59,9 +60,9 @@ void MCL::sampling(const Action &u)
         amostraRot1 = normalDistRot1(*generator);
         amostraTrans = normalDistTrans(*generator);
         amostraRot2 = normalDistRot2(*generator);
-        particles[i].p.x += amostraRot1;
-        particles[i].p.y += amostraTrans;
-        particles[i].p.theta += amostraRot2;
+        particles[i].p.x += amostraTrans*cos(particles[i].p.theta + amostraRot1);
+        particles[i].p.y += amostraTrans*sin(particles[i].p.theta + amostraRot1);
+        particles[i].p.theta += amostraRot1 + amostraRot2;
     }
 }
 
