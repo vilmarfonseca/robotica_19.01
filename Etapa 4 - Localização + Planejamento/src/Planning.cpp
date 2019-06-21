@@ -77,21 +77,29 @@ void Planning::run()
     // TODO: define motion planning strategy
 
 
+    if(!frontierCenters.empty()){
+        foundFirstFrontier = true;
+        computeHeuristic();
+        computeAStar();
+//        std::cout << "Saiu AStar.";
+        markPathCells();
+        findLocalGoal();
 
+    }else{
+        // don't have any frontiers remaining
 
+        if(foundFirstFrontier){
+            localGoal = NULL;
+            std::cout << "EXPLORATION COMPLETE!" << std::endl;
+        }
+    }
 
+    initializePotentials();
 
+    for(int i=0; i<100; i++)
+        iteratePotentials();
 
-
-
-
-
-
-
-
-
-
-
+    updateGradient();
 }
 
 /////////////////////////////////////////////
@@ -111,8 +119,14 @@ void Planning::resetCellsTypes()
                 c->occType = FREE;
 
             c->planType = REGULAR;
+            c->g = DBL_MAX;
+            c->h = DBL_MAX;
+            c->f = DBL_MAX;
+            c->pi = NULL;
         }
     }
+    goal = NULL;
+    localGoal = NULL;
 }
 
 void Planning::updateCellsTypes()

@@ -238,7 +238,7 @@ void Robot::followPotentialField()
     // TODO: define the robot velocities using a control strategy
     //       based on the direction of the gradient of c given by c->dirX and c->dirY
 
-    linVel=0.5;
+    linVel=0.2;
     angVel=0.0;
 
     float dirX, dirY;
