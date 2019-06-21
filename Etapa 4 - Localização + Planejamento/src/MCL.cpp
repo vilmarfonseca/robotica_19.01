@@ -18,7 +18,7 @@ MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     scale = 10;
     transparency = false;
 
-    numParticles = 10;
+    numParticles = 1000;
 
     initParticles();
 }
@@ -39,8 +39,6 @@ void MCL::run(const Action &u, const std::vector<float> &z)
 
 void MCL::sampling(const Action &u)
 {
-    /// TODO: propagar todas as particulas de acordo com o modelo de movimento baseado em odometria
-
     /// Odometria definida pela estrutura Action, composta por 3 variaveis double:
     /// rot1, trans e rot2
     std::cout << "rot1 " << RAD2DEG(u.rot1) << " trans " << u.trans << " rot2 " << RAD2DEG(u.rot2) << std::endl;
@@ -69,24 +67,65 @@ void MCL::sampling(const Action &u)
 void MCL::weighting(const std::vector<float> &z)
 {
 
+    float kParticleObservation = 0.0;
+    float kRobotObservation = 0.0;
+    float individualProb = 0.0;
+    float totalProb = 1.0;
+    float var = 0.1;
+    float totalWeight = 0.0;
+    float normalizedWeight = 0.0;
+
     for(int i = 0; i < numParticles; i++)
     {
+        std::cout << "Partícula: " << i << std::endl;
+        individualProb = 0.0;
+        totalProb = 1.0;
+        int count = 0;
          /// 1: elimine particulas fora do espaco livre
         if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
         {
             particles[i].w = 0;
         }
+        else
+        {
+            /// 2: compare as observacoes da particula com as observacoes z do robo
+            // Use a funcao computeExpectedMeasurement(k, particles[i].p)
+            // para achar a k-th observacao esperada da particula i
+            for(int k = 0; k < 180; k+=15)
+            {
+                count++;
+                std::cout << "count: " << count << std::endl;
 
-        /// 2: compare as observacoes da particula com as observacoes z do robo
-        // Use a funcao computeExpectedMeasurement(k, particles[i].p)
-        // para achar a k-th observacao esperada da particula i
+                // A probabilidade final associada à particula p pode ser aproximada pelo produto das probabilidades individuais.
+                kRobotObservation = z[k];
+                kParticleObservation = computeExpectedMeasurement(k, particles[i].p);
+                // A probabilidade de uma medição individual pode ser definida de acordo com o modelo visto em aula.
+                individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-1/2)*(pow((kRobotObservation - kParticleObservation),2)/var));
+                std::cout << "indivProb: " << individualProb << std::endl;
+                totalProb = totalProb * individualProb;
+                std::cout << "totalProb: " << totalProb << std::endl;
+            }
+            particles[i].w = totalProb;
+        }
+        /// 3: normalize os pesos
+        totalWeight += particles[i].w;
+        std::cout << "totalWeight: " << totalWeight << std::endl;
     }
 
+    if(totalWeight != 0)
+    {
+        normalizedWeight = totalWeight / numParticles;
+    }
+    else
+    {
+        std::cout << "Variância muito pequena!!!" << std::endl;
+        normalizedWeight = 1 / numParticles;
+    }
 
-
-
-
-    /// 3: normalize os pesos
+    for(int i = 0; i < numParticles; i++)
+    {
+        particles[i].w = normalizedWeight;
+    }
 
 }
 
@@ -94,17 +133,29 @@ void MCL::resampling()
 {
     // gere uma nova geração de particulas com o mesmo tamanho do conjunto atual
     std::vector<MCLparticle> nextGeneration;
-    //nextGeneration.resize(numParticles);
+    nextGeneration.resize(numParticles);
 
     /// TODO: Implemente o Low Variance Resampling
+    //https://github.com/JuliaStats/StatsBase.jl/issues/124
 
     /// Para gerar amostras de uma distribuição uniforme entre valores MIN e MAX, pode-se usar:
-    // std::uniform_real_distribution<double> samplerU(MIN,MAX));
+    std::uniform_real_distribution<double> samplerU(0,1/numParticles);
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
-    // double amostra = samplerU(*generator)
+    double r = samplerU(*generator);
+    double c = particles[1].w;
+    int i = 0;
+
+    for(int j = 1; j <= numParticles; j++)
+    {
+        double u = r + (1/numParticles)*(j - 1);
+        while(u > c)
+        {
+            i++;
+            c += particles[i].w;
+        }
+        nextGeneration[j-1] = particles[i];
+    }
     /// onde *generator é um gerador de numeros aleatorios (definido no construtor da classe)
-
-
 }
 
 /////////////////////////////////////////////////////
