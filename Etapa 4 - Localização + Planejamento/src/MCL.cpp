@@ -19,7 +19,7 @@ MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     scale = 10;
     transparency = false;
 
-    numParticles = 10000;
+    numParticles = 1000;
 
     initParticles();
 }
@@ -47,22 +47,23 @@ void MCL::sampling(const Action &u)
     /// Seguindo o modelo de Thrun, devemos gerar 3 distribuicoes normais, uma para cada componente da odometria
 
     /// Para definir uma distribuição normal X de media M e variancia V, pode-se usar:
-    std::normal_distribution<double> normalDistRot1(0,u.rot1);
-    std::normal_distribution<double> normalDistTrans(0,u.trans);
-    std::normal_distribution<double> normalDistRot2(0,u.rot2);
+    std::normal_distribution<double> normalDistRot1(0,((0.01*u.rot1) + (0.01*u.trans)));
+    std::normal_distribution<double> normalDistTrans(0,((0.01*u.trans) + (0.01*u.rot2)));
+    std::normal_distribution<double> normalDistRot2(0,((0.01*u.rot2) + (0.01*u.rot1)));
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
     double amostraRot1 = 0.0;
     double amostraTrans = 0.0;
     double amostraRot2 = 0.0;
+
     /// onde *generator é um gerador de numeros aleatorios (definido no construtor da classe)
     for(int i = 0; i < numParticles; i++)
     {
-        amostraRot1 = normalDistRot1(*generator);
-        amostraTrans = normalDistTrans(*generator);
-        amostraRot2 = normalDistRot2(*generator);
-        particles[i].p.x += amostraTrans*cos(particles[i].p.theta + amostraRot1);
-        particles[i].p.y += amostraTrans*sin(particles[i].p.theta + amostraRot1);
-        particles[i].p.theta += (amostraRot1 + amostraRot2);
+        amostraRot1 = u.rot1 - normalDistRot1(*generator);
+        amostraTrans = u.trans - normalDistTrans(*generator);
+        amostraRot2 = u.rot2 - normalDistRot2(*generator);
+        particles[i].p.x = particles[i].p.x + amostraTrans*cos(particles[i].p.theta + amostraRot1);
+        particles[i].p.y = particles[i].p.y + amostraTrans*sin(particles[i].p.theta + amostraRot1);
+        particles[i].p.theta = particles[i].p.theta + (amostraRot1 + amostraRot2);
     }
 }
 
@@ -73,13 +74,13 @@ void MCL::weighting(const std::vector<float> &z)
     float kRobotObservation = 0.0;
     float individualProb = 0.0;
     float totalProb = 1.0;
-    float var = 0.01;
+    float var = 0.1;
     float totalWeight = 0.0;
     float normalizedWeight = 0.0;
 
     for(int i = 0; i < numParticles; i++)
     {
-        //sleep(1);
+//        sleep(2);
 //        std::cout << "Partícula: " << i << std::endl;
         individualProb = 0.0;
         totalProb = 1.0;
@@ -107,7 +108,7 @@ void MCL::weighting(const std::vector<float> &z)
                 // A probabilidade de uma medição individual pode ser definida de acordo com o modelo visto em aula.
                 individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-1/2)*(pow((kRobotObservation - kParticleObservation),2)/var));
 //                std::cout << "indivProb: " << individualProb << std::endl;
-                totalProb += totalProb * individualProb;
+                totalProb = totalProb + (totalProb * individualProb);
 //                std::cout << "totalProb: " << totalProb << std::endl;
             }
             particles[i].w = totalProb;
@@ -120,15 +121,18 @@ void MCL::weighting(const std::vector<float> &z)
     if(totalWeight != 0)
     {
         normalizedWeight = totalWeight / numParticles;
+//        std::cout << "[IF-TOTALWEIGHT!=0]normalizedWeight " << normalizedWeight << std::endl;
     }
     else
     {
-        std::cout << "Variância muito pequena!!!" << std::endl;
+//        std::cout << "Variância muito pequena!!!" << std::endl;
         normalizedWeight = 1 / numParticles;
+//        std::cout << "normalizedWeight " << normalizedWeight << std::endl;
     }
 
     for(int i = 0; i < numParticles; i++)
     {
+//        std::cout << "Normalizando partícula " << i << std::endl;
         particles[i].w = normalizedWeight;
     }
 
@@ -224,7 +228,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/nicholas/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/nicholas/UFRGS/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);
