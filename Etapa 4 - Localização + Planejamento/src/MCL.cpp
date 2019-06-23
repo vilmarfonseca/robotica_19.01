@@ -19,7 +19,7 @@ MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     scale = 10;
     transparency = false;
 
-    numParticles = 1000;
+    numParticles = 10000;
 
     initParticles();
 }
@@ -73,8 +73,8 @@ void MCL::weighting(const std::vector<float> &z)
     float kParticleObservation = 0.0;
     float kRobotObservation = 0.0;
     float individualProb = 0.0;
-    float totalProb = 1.0;
-    float var = 0.1;
+    double totalProb = 1.0;
+    float var = 15;
     float totalWeight = 0.0;
     float normalizedWeight = 0.0;
 
@@ -97,7 +97,7 @@ void MCL::weighting(const std::vector<float> &z)
             /// 2: compare as observacoes da particula com as observacoes z do robo
             // Use a funcao computeExpectedMeasurement(k, particles[i].p)
             // para achar a k-th observacao esperada da particula i
-            for(int k = 0; k < 180; k+=15)
+            for(int k = 0; k < 181; k+=20)
             {
                 count++;
 //                std::cout << "count: " << count << std::endl;
@@ -109,7 +109,7 @@ void MCL::weighting(const std::vector<float> &z)
                 individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-1/2)*(pow((kRobotObservation - kParticleObservation),2)/var));
 //                std::cout << "indivProb: " << individualProb << std::endl;
                 totalProb = totalProb + (totalProb * individualProb);
-//                std::cout << "totalProb: " << totalProb << std::endl;
+                std::cout << "totalProb: " << totalProb << std::endl;
             }
             particles[i].w = totalProb;
         }
@@ -120,13 +120,16 @@ void MCL::weighting(const std::vector<float> &z)
 
     if(totalWeight != 0)
     {
-        normalizedWeight = totalWeight / numParticles;
-//        std::cout << "[IF-TOTALWEIGHT!=0]normalizedWeight " << normalizedWeight << std::endl;
+        for(int i = 0; i < numParticles; i++)
+        {
+            normalizedWeight = totalWeight / numParticles;
+            //std::cout << "[IF-TOTALWEIGHT!=0]normalizedWeight " << normalizedWeight << std::endl;
+        }
     }
     else
     {
 //        std::cout << "Variância muito pequena!!!" << std::endl;
-        normalizedWeight = 1 / numParticles;
+        normalizedWeight = 0.0001;
 //        std::cout << "normalizedWeight " << normalizedWeight << std::endl;
     }
 
@@ -148,18 +151,19 @@ void MCL::resampling()
     //https://github.com/JuliaStats/StatsBase.jl/issues/124
 
     /// Para gerar amostras de uma distribuição uniforme entre valores MIN e MAX, pode-se usar:
-    std::uniform_real_distribution<double> samplerU(0,1/numParticles);
+    std::uniform_real_distribution<double> samplerU(0,0.0001);
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
     double r = samplerU(*generator);
+//    std::cout << "Valor do R:" << r << std::endl;
     double c = particles[1].w;
     double u = 0.0;
     int i = 1;
 
     for(int j = 1; j <= numParticles; j++)
     {
-        u = 0.0;
-        r = samplerU(*generator); //Não sei se tem q gerar um r novo pra cada partícula ou não. No algoritmo parece que não.
-        u = r + (1/numParticles)*(j - 1);
+        //u = 0.0;
+        //r = samplerU(*generator); //Não sei se tem q gerar um r novo pra cada partícula ou não. No algoritmo parece que não.
+        u = r + (0.0001)*(j - 1);
         while(u > c)
         {
             i++;
@@ -228,7 +232,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/nicholas/UFRGS/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/vilmarfonseca/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);
