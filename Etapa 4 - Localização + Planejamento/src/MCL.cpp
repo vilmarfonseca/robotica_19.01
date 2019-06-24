@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
-//#include <cmath>
+#include <cmath>
 
 #include <GL/glut.h>
 
@@ -47,9 +47,9 @@ void MCL::sampling(const Action &u)
     /// Seguindo o modelo de Thrun, devemos gerar 3 distribuicoes normais, uma para cada componente da odometria
 
     /// Para definir uma distribuição normal X de media M e variancia V, pode-se usar:
-    std::normal_distribution<double> normalDistRot1(0,((0.01*u.rot1) + (0.01*u.trans)));
+    std::normal_distribution<double> normalDistRot1(0,((0.1*u.rot1) + (0.1*u.trans)));
     std::normal_distribution<double> normalDistTrans(0,((0.01*u.trans) + (0.01*u.rot2)));
-    std::normal_distribution<double> normalDistRot2(0,((0.01*u.rot2) + (0.01*u.rot1)));
+    std::normal_distribution<double> normalDistRot2(0,((0.1*u.rot2) + (0.1*u.rot1)));
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
     double amostraRot1 = 0.0;
     double amostraTrans = 0.0;
@@ -70,18 +70,18 @@ void MCL::sampling(const Action &u)
 void MCL::weighting(const std::vector<float> &z)
 {
 
-    float kParticleObservation = 0.0;
-    float kRobotObservation = 0.0;
-    float individualProb = 0.0;
+    double kParticleObservation = 0.0;
+    double kRobotObservation = 0.0;
+    double individualProb = 0.0;
     double totalProb = 1.0;
-    float var = 15;
-    float totalWeight = 0.0;
-    float normalizedWeight = 0.0;
+    double var = 5.0;
+    double totalWeight = 0.0;
+    double normalizedWeight = 0.0;
 
     for(int i = 0; i < numParticles; i++)
     {
-//        sleep(2);
-//        std::cout << "Partícula: " << i << std::endl;
+//        sleep(1);
+        std::cout << "-----Partícula: " << i << "-----" << std::endl;
         individualProb = 0.0;
         totalProb = 1.0;
         totalWeight = 0.0;
@@ -90,7 +90,8 @@ void MCL::weighting(const std::vector<float> &z)
          /// 1: elimine particulas fora do espaco livre
         if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
         {
-            particles[i].w = 0;
+            std::cout << "Partícula fora do mapa" << std::endl;
+            particles[i].w = 0.0;
         }
         else
         {
@@ -99,16 +100,19 @@ void MCL::weighting(const std::vector<float> &z)
             // para achar a k-th observacao esperada da particula i
             for(int k = 0; k < 181; k+=20)
             {
-                count++;
-//                std::cout << "count: " << count << std::endl;
-
+                individualProb = 0.0;
+//                sleep(3);
+//                count++;
                 // A probabilidade final associada à particula p pode ser aproximada pelo produto das probabilidades individuais.
                 kRobotObservation = z[k];
+//                std::cout << "RobotObservation " << k << ": " << kRobotObservation << std::endl;
                 kParticleObservation = computeExpectedMeasurement(k, particles[i].p);
+//                std::cout << "ParticleObservation " << k << ": " << kParticleObservation << std::endl;
                 // A probabilidade de uma medição individual pode ser definida de acordo com o modelo visto em aula.
-                individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-1/2)*(pow((kRobotObservation - kParticleObservation),2)/var));
+                individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-0.5)*(pow((kRobotObservation - kParticleObservation),2)/var));
 //                std::cout << "indivProb: " << individualProb << std::endl;
-                totalProb = totalProb + (totalProb * individualProb);
+
+                totalProb = (totalProb * individualProb);
                 std::cout << "totalProb: " << totalProb << std::endl;
             }
             particles[i].w = totalProb;
@@ -118,27 +122,23 @@ void MCL::weighting(const std::vector<float> &z)
 //        std::cout << "totalWeight: " << totalWeight << std::endl;
     }
 
-    if(totalWeight != 0)
+//    sleep(5);
+
+    if(totalWeight != 0.0)
     {
-        for(int i = 0; i < numParticles; i++)
-        {
-            normalizedWeight = totalWeight / numParticles;
-            //std::cout << "[IF-TOTALWEIGHT!=0]normalizedWeight " << normalizedWeight << std::endl;
-        }
+        normalizedWeight = totalWeight / numParticles;
+        std::cout << "normalized = " << normalizedWeight << std::endl;
     }
     else
     {
-//        std::cout << "Variância muito pequena!!!" << std::endl;
+        std::cout << "Variância muito pequena!!!" << std::endl;
         normalizedWeight = 0.0001;
-//        std::cout << "normalizedWeight " << normalizedWeight << std::endl;
     }
 
     for(int i = 0; i < numParticles; i++)
     {
-//        std::cout << "Normalizando partícula " << i << std::endl;
         particles[i].w = normalizedWeight;
     }
-
 }
 
 void MCL::resampling()
@@ -146,10 +146,15 @@ void MCL::resampling()
     // gere uma nova geração de particulas com o mesmo tamanho do conjunto atual
     std::vector<MCLparticle> nextGeneration;
     nextGeneration.resize(numParticles);
+    for(int i = 0; i < numParticles; i++)
+    {
+        nextGeneration[i].p.x = 0.0;
+        nextGeneration[i].p.y = 0.0;
+        nextGeneration[i].p.theta = 0.0;
+        nextGeneration[i].w = 0.0;
+    }
 
     /// TODO: Implemente o Low Variance Resampling
-    //https://github.com/JuliaStats/StatsBase.jl/issues/124
-
     /// Para gerar amostras de uma distribuição uniforme entre valores MIN e MAX, pode-se usar:
     std::uniform_real_distribution<double> samplerU(0,0.0001);
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
@@ -164,14 +169,30 @@ void MCL::resampling()
         //u = 0.0;
         //r = samplerU(*generator); //Não sei se tem q gerar um r novo pra cada partícula ou não. No algoritmo parece que não.
         u = r + (0.0001)*(j - 1);
-        while(u > c)
+        while((u > c) && (i < numParticles))
         {
+            std::cout << "Valor do i:" << i << std::endl;
             i++;
             c += particles[i].w;
         }
-        nextGeneration[j-1] = particles[i-1];
+        nextGeneration[j-1].p.x = particles[i-1].p.x;
+        nextGeneration[j-1].p.y = particles[i-1].p.y;
+        nextGeneration[j-1].p.theta = particles[i-1].p.theta;
+        nextGeneration[j-1].w = particles[i-1].w;
     }
-    particles = nextGeneration;
+//    sleep(5);
+    for(int i = 0; i < numParticles; i++)
+    {
+        if(nextGeneration[i].w == 0.0)
+        {
+            particles[i] = particles[i];
+        }
+        else
+        {
+            particles[i] = nextGeneration[i];
+        }
+    }
+//    particles = nextGeneration;
     /// onde *generator é um gerador de numeros aleatorios (definido no construtor da classe)
 }
 
@@ -232,7 +253,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/vilmarfonseca/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/nicholas/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);
