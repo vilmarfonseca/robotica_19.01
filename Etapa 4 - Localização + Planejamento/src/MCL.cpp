@@ -74,14 +74,14 @@ void MCL::weighting(const std::vector<float> &z)
     double kRobotObservation = 0.0;
     double individualProb = 0.0;
     double totalProb = 1.0;
-    double var = 5.0;
+    double var = 15.0;
     double totalWeight = 0.0;
     double normalizedWeight = 0.0;
 
     for(int i = 0; i < numParticles; i++)
     {
 //        sleep(1);
-        std::cout << "-----Partícula: " << i << "-----" << std::endl;
+//        std::cout << "-----Partícula: " << i << "-----" << std::endl;
         individualProb = 0.0;
         totalProb = 1.0;
         totalWeight = 0.0;
@@ -90,7 +90,7 @@ void MCL::weighting(const std::vector<float> &z)
          /// 1: elimine particulas fora do espaco livre
         if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
         {
-            std::cout << "Partícula fora do mapa" << std::endl;
+//            std::cout << "Partícula fora do mapa" << std::endl;
             particles[i].w = 0.0;
         }
         else
@@ -112,8 +112,8 @@ void MCL::weighting(const std::vector<float> &z)
                 individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-0.5)*(pow((kRobotObservation - kParticleObservation),2)/var));
 //                std::cout << "indivProb: " << individualProb << std::endl;
 
-                totalProb = (totalProb * individualProb);
-                std::cout << "totalProb: " << totalProb << std::endl;
+                totalProb = totalProb + (totalProb * individualProb);
+//                std::cout << "totalProb: " << totalProb << std::endl;
             }
             particles[i].w = totalProb;
         }
@@ -127,7 +127,7 @@ void MCL::weighting(const std::vector<float> &z)
     if(totalWeight != 0.0)
     {
         normalizedWeight = totalWeight / numParticles;
-        std::cout << "normalized = " << normalizedWeight << std::endl;
+//        std::cout << "normalized = " << normalizedWeight << std::endl;
     }
     else
     {
@@ -171,7 +171,7 @@ void MCL::resampling()
         u = r + (0.0001)*(j - 1);
         while((u > c) && (i < numParticles))
         {
-            std::cout << "Valor do i:" << i << std::endl;
+//            std::cout << "Valor do i:" << i << std::endl;
             i++;
             c += particles[i].w;
         }
@@ -253,7 +253,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/nicholas/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/vilmarfonseca/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);
