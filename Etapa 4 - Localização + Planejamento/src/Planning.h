@@ -33,8 +33,9 @@ class Planning {
         void setGoalPose(Pose p);
         void setGrid(Grid* g);
         void setMaxUpdateRange(int r);
+        void setMapFromMCL(int mapWidth, int mapHeight, CellOccType** mapcells);
 
-
+        Pose *goalPose;
         Grid* grid;
         double curPref;
 
@@ -54,7 +55,6 @@ class Planning {
         void iteratePotentials();
         void updateGradient();
 
-        Pose *goalPose;
 
         point2d robotPosition;
         bbox gridLimits;

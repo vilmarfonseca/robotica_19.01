@@ -58,6 +58,27 @@ void Planning::setGoalPose(Pose p)
     goalPose->y = p.y;
 }
 
+//void Planning::setMapFromMCL(int mapWidth, int mapHeight, CellOccType** mapcells){
+//    for(int y=0; y < mapHeight; y++)
+//    {
+//        for(int x=0; x < mapWidth; x++)
+//        {
+//            file >> read;
+//            switch(read)
+//            {
+//                case '1':
+//                    mapCells[x][y] = OCCUPIED;
+//                    break;
+//                case '0':
+//                    mapCells[x][y] = FREE;
+//                    break;
+//                case '-':
+//                    mapCells[x][y] = UNEXPLORED;
+//                    break;
+//            }
+//        }
+//    }
+//}
 void Planning::run()
 {
     pthread_mutex_lock(grid->mutex);

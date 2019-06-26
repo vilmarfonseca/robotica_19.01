@@ -113,6 +113,8 @@ void Robot::run()
     pthread_mutex_unlock(grid->mutex);
 
     plan->setNewRobotPose(currentPose_);
+    plan->setGoalPose(mcl->goal);
+//    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
 
     // Save path traversed by the robot
     if(base.isMoving() || logMode_==PLAYBACK){
