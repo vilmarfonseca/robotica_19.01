@@ -74,23 +74,18 @@ void MCL::weighting(const std::vector<float> &z)
     double kRobotObservation = 0.0;
     double individualProb = 0.0;
     double totalProb = 1.0;
-    double var = 15.0;
+    double var = 50.0; 
     double totalWeight = 0.0;
-    double normalizedWeight = 0.0;
 
     for(int i = 0; i < numParticles; i++)
     {
-//        sleep(1);
-//        std::cout << "-----Partícula: " << i << "-----" << std::endl;
         individualProb = 0.0;
         totalProb = 1.0;
-        totalWeight = 0.0;
-        normalizedWeight = 0.0;
+        //totalWeight = 0.0; //NÃO DEVE SER ZERADO AQUI
         int count = 0;
          /// 1: elimine particulas fora do espaco livre
         if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
         {
-//            std::cout << "Partícula fora do mapa" << std::endl;
             particles[i].w = 0.0;
         }
         else
@@ -101,44 +96,37 @@ void MCL::weighting(const std::vector<float> &z)
             for(int k = 0; k < 181; k+=20)
             {
                 individualProb = 0.0;
-//                sleep(3);
-//                count++;
                 // A probabilidade final associada à particula p pode ser aproximada pelo produto das probabilidades individuais.
                 kRobotObservation = z[k];
-//                std::cout << "RobotObservation " << k << ": " << kRobotObservation << std::endl;
-                kParticleObservation = computeExpectedMeasurement(k, particles[i].p);
-//                std::cout << "ParticleObservation " << k << ": " << kParticleObservation << std::endl;
-                // A probabilidade de uma medição individual pode ser definida de acordo com o modelo visto em aula.
-                individualProb = (1 / (sqrt(2 * M_PI * var))) * exp((-0.5)*(pow((kRobotObservation - kParticleObservation),2)/var));
-//                std::cout << "indivProb: " << individualProb << std::endl;
 
-                totalProb = totalProb + (totalProb * individualProb);
-//                std::cout << "totalProb: " << totalProb << std::endl;
+                kParticleObservation = computeExpectedMeasurement(k, particles[i].p);
+                // A probabilidade de uma medição individual pode ser definida de acordo com o modelo visto em aula.
+                individualProb = (1.0 / (sqrt(2.0 * M_PI * var))) * exp((-0.5)*(pow((kRobotObservation - kParticleObservation),2)/var));
+
+                totalProb = (totalProb * individualProb);
             }
             particles[i].w = totalProb;
         }
-        /// 3: normalize os pesos
         totalWeight += particles[i].w;
-//        std::cout << "totalWeight: " << totalWeight << std::endl;
     }
-
-//    sleep(5);
 
     if(totalWeight != 0.0)
     {
-        normalizedWeight = totalWeight / numParticles;
-//        std::cout << "normalized = " << normalizedWeight << std::endl;
+        for(int i = 0; i < numParticles; i++)
+        {
+            particles[i].w /= totalWeight;
+        }
     }
     else
     {
         std::cout << "Variância muito pequena!!!" << std::endl;
-        normalizedWeight = 0.0001;
+
+        for(int i = 0; i < numParticles; i++)
+        {
+            particles[i].w = 1.0/numParticles;
+        }
     }
 
-    for(int i = 0; i < numParticles; i++)
-    {
-        particles[i].w = normalizedWeight;
-    }
 }
 
 void MCL::resampling()
@@ -146,54 +134,31 @@ void MCL::resampling()
     // gere uma nova geração de particulas com o mesmo tamanho do conjunto atual
     std::vector<MCLparticle> nextGeneration;
     nextGeneration.resize(numParticles);
-    for(int i = 0; i < numParticles; i++)
-    {
-        nextGeneration[i].p.x = 0.0;
-        nextGeneration[i].p.y = 0.0;
-        nextGeneration[i].p.theta = 0.0;
-        nextGeneration[i].w = 0.0;
-    }
 
     /// TODO: Implemente o Low Variance Resampling
     /// Para gerar amostras de uma distribuição uniforme entre valores MIN e MAX, pode-se usar:
-    std::uniform_real_distribution<double> samplerU(0,0.0001);
+    std::uniform_real_distribution<double> samplerU(0,1.0/numParticles);
     /// Para gerar amostras segundo a distribuicao acima, usa-se:
     double r = samplerU(*generator);
-//    std::cout << "Valor do R:" << r << std::endl;
-    double c = particles[1].w;
+    //std::cout << "Valor do R:" << r << std::endl;
+    double c = particles[0].w;
+    //std::cout << "Valor do C:" << c << std::endl;
     double u = 0.0;
     int i = 1;
 
     for(int j = 1; j <= numParticles; j++)
     {
-        //u = 0.0;
-        //r = samplerU(*generator); //Não sei se tem q gerar um r novo pra cada partícula ou não. No algoritmo parece que não.
-        u = r + (0.0001)*(j - 1);
-        while((u > c) && (i < numParticles))
+        u = r + (1.0/numParticles)*(j - 1);
+        //std::cout << "Valor do U:" << u << std::endl;
+        //std::cout << "Valor do R:" << r << std::endl;
+        while((u > c))
         {
-//            std::cout << "Valor do i:" << i << std::endl;
             i++;
-            c += particles[i].w;
+            c += particles[i-1].w;
         }
-        nextGeneration[j-1].p.x = particles[i-1].p.x;
-        nextGeneration[j-1].p.y = particles[i-1].p.y;
-        nextGeneration[j-1].p.theta = particles[i-1].p.theta;
-        nextGeneration[j-1].w = particles[i-1].w;
+        nextGeneration[j-1] = particles [i-1];
     }
-//    sleep(5);
-    for(int i = 0; i < numParticles; i++)
-    {
-        if(nextGeneration[i].w == 0.0)
-        {
-            particles[i] = particles[i];
-        }
-        else
-        {
-            particles[i] = nextGeneration[i];
-        }
-    }
-//    particles = nextGeneration;
-    /// onde *generator é um gerador de numeros aleatorios (definido no construtor da classe)
+    particles = nextGeneration;
 }
 
 /////////////////////////////////////////////////////
