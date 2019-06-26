@@ -46,39 +46,39 @@ void Planning::setNewRobotPose(Pose p)
     newRobotPosition.x = (int)(p.x*grid->getMapScale());
     newRobotPosition.y = (int)(p.y*grid->getMapScale());
 
+
     newGridLimits.minX = std::min(newGridLimits.minX,newRobotPosition.x-maxUpdateRange);
     newGridLimits.maxX = std::max(newGridLimits.maxX,newRobotPosition.x+maxUpdateRange);
     newGridLimits.minY = std::min(newGridLimits.minY,newRobotPosition.y-maxUpdateRange);
     newGridLimits.maxY = std::max(newGridLimits.maxY,newRobotPosition.y+maxUpdateRange);
+
+    std::cout << "NewPose X: " << newRobotPosition.x << std::endl;
+    std::cout << "NewPose Y: " << newRobotPosition.y << std::endl;
 }
 
 void Planning::setGoalPose(Pose p)
 {
-    goalPose->x = p.x;
-    goalPose->y = p.y;
+    goalPose->x = p.x*grid->getMapScale();
+    goalPose->y = p.y*grid->getMapScale();
+//    std::cout << "goalPose X: " << goalPose->x << std::endl;
+//    std::cout << "goalPose Y: " << goalPose->y << std::endl;
 }
 
-//void Planning::setMapFromMCL(int mapWidth, int mapHeight, CellOccType** mapcells){
-//    for(int y=0; y < mapHeight; y++)
-//    {
-//        for(int x=0; x < mapWidth; x++)
-//        {
-//            file >> read;
-//            switch(read)
-//            {
-//                case '1':
-//                    mapCells[x][y] = OCCUPIED;
-//                    break;
-//                case '0':
-//                    mapCells[x][y] = FREE;
-//                    break;
-//                case '-':
-//                    mapCells[x][y] = UNEXPLORED;
-//                    break;
-//            }
-//        }
-//    }
-//}
+void Planning::setMapFromMCL(int mapWidth, int mapHeight, CellOccType** mapcells)
+{
+    Cell* c;
+    for(int y=0; y < mapHeight; y++)
+    {
+        for(int x=0; x < mapWidth; x++)
+        {
+            {
+                c = grid->getCell(x,y);
+                c->occType = mapcells[x][y];
+            }
+        }
+    }
+}
+
 void Planning::run()
 {
     pthread_mutex_lock(grid->mutex);
@@ -436,6 +436,8 @@ void Planning::computeAStar()
 
     int x = robotPosition.x;
     int y = robotPosition.y;
+    std::cout << "Posição do robô para o A-estrela X: " << robotPosition.x << std::endl;
+    std::cout << "Posição do robô para o A-estrela Y: " << robotPosition.y << std::endl;
     // Start node.
     start = grid->getCell(x,y);
     start->g = start->f = 0;

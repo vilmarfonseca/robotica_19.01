@@ -58,7 +58,6 @@ void Robot::initialize(ConnectionMode cmode, LogMode lmode, std::string fname, s
             exit(0);
         }
     }
-
     ready_ = true;
     controlTimer.startLap();
 }
@@ -112,9 +111,18 @@ void Robot::run()
 
     pthread_mutex_unlock(grid->mutex);
 
-    plan->setNewRobotPose(currentPose_);
+//    plan->setNewRobotPose(currentPose_);
+    plan->setNewRobotPose(mcl->meanParticlePose);
+//    std::cout << "MeanParticlesPose X: " << mcl->meanParticlePose.x << std::endl;
+//    std::cout << "MeanParticlesPose Y: " << mcl->meanParticlePose.y << std::endl;
     plan->setGoalPose(mcl->goal);
-//    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
+//        std::cout << "majoraxis : " << mcl->covMajorAxis << std::endl;
+//        std::cout << "minoraxis : " << mcl->covMinorAxis << std::endl;
+//      if(mcl->covMajorAxis < 2.0 || mcl->covMinorAxis < 1.5);
+
+    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
+
+
 
     // Save path traversed by the robot
     if(base.isMoving() || logMode_==PLAYBACK){
