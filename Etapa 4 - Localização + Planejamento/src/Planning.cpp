@@ -659,3 +659,136 @@ void Planning::updateGradient()
         }
     }
 }
+
+/* POSSÍVEL A* */
+
+//void Planning::computeHeuristic()
+//{
+//    Cell* c;
+
+//    // TODO: update h-value of all FREE cells and all FRONTIER cells in the grid
+//    //
+//    //  (gridLimits.minX, gridLimits.maxY)  -------  (gridLimits.maxX, gridLimits.maxY)
+//    //                     |                       \                         |
+//    //                     |                        \                        |
+//    //                     |                         \                       |
+//    //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
+
+//    int i, j = 0;
+//    float d = FLT_MAX;  // Distância da célula para célula_da_fronteira[i], começa com maior valor int para substituir depois.
+////    float tempD = 0.0;
+////    Cell *temp;
+
+//    for(i = gridLimits.minX; i <= gridLimits.maxX; i++)
+//    {
+//        for(j = gridLimits.minY; j <= gridLimits.maxY; j++)
+//        {
+//            c = grid->getCell(i,j);
+
+////          Nas células de objetivo, o valor de c->h será obviamente 0
+
+//            if((c->x == goalPose->x) && (c->y == goalPose->y))
+//            {
+//                c->h = 0;
+//            }
+////          Nas demais células livres (c->occType == FREE), é preciso determinar a distância euclidiana para
+////          a célula de objetivo mais próxima dentre todas em std::vector<Cell*> frontierCenters.
+//            else if (c->occType == FREE)
+//            {
+//                d = sqrt(pow(c->x - goalPose->x , 2.0) + pow(c->y - goalPose->y , 2.0));
+////                int k = 0;
+////                int size = frontierCenters.size();
+
+////                for(k = 0; k < size; k++)
+////                {
+////                    temp = frontierCenters[k];
+////                    tempD = sqrt(pow(c->x - temp->x , 2.0) + pow(c->y - temp->y , 2.0));
+////                    if(tempD < d)
+////                    {
+////                        d = tempD;
+////                    }
+////                }
+//                c->h = d;
+//            }
+//        }
+//    }
+//}
+
+//// eight neighbors offset
+//// usage, i-th neighbor:    n = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
+//int offset[8][2] = {{-1,  1}, { 0,  1}, { 1,  1}, { 1,  0}, { 1, -1}, { 0, -1}, {-1, -1}, {-1,  0}};
+
+//// eight neighbors travel cost
+//// usage, i-th neighbor:    n->g = c->g + cost[i];
+//double cost[8] = {sqrt(2), 1, sqrt(2), 1, sqrt(2), 1, sqrt(2), 1};
+
+//// comparison function used in the priority queue
+//class Compare
+//{
+//public:
+//    bool operator() (const Cell* a, const Cell* b)
+//    {
+//        return a->f > b->f;
+//    }
+//};
+
+//void Planning::computeAStar()
+//{
+//    Cell *c;
+//    Cell *neighbor;
+//    Cell *start;
+
+//    // Priority queue of Cell pointers ordered by key-value c->f
+//    std::priority_queue<Cell*,std::vector<Cell*>,Compare> pq;
+//    //std::priority_queue<Cell*,std::vector<Cell*>,Compare> empty;
+
+
+//    // pq.push(c)   -- to insert cell in queue
+//    // c = pq.top() -- to get top cell (the one with the smallest f value)
+//    // pq.pop()     -- to remove top cell from queue
+
+
+//    // TODO: implement A-Star
+
+//    int x = robotPosition.x;
+//    int y = robotPosition.y;
+//    std::cout << "Posição do robô para o A-estrela X: " << robotPosition.x << std::endl;
+//    std::cout << "Posição do robô para o A-estrela Y: " << robotPosition.y << std::endl;
+//    // Start node.
+//    start = grid->getCell(x,y);
+//    start->g = start->f = 0;
+
+//    // Coloca nodo start na fila.
+//    pq.push(start);
+
+//    // Loop para achar o caminho.
+//    while(pq.top() != NULL && goal == NULL)
+//    {
+//        c = pq.top();
+
+//        // Como nodo já foi analisado, removê-lo da priority queue.
+//        pq.pop();
+
+//        // Analisar seus vizinhos.
+//        int i = 0;
+//        for(i = 0; i <= 7; i++)
+//        {
+//            // Altera entre os 8 vizinhos
+
+//            neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
+//            if(neighbor->f == DBL_MAX && goal == NULL)
+//            {
+//                neighbor->g = c->g + cost[i];
+//                neighbor->f = neighbor->g + neighbor->h;
+//                neighbor->pi = c;
+//                // A busca do menor caminho deve ser propagada adicionando células vizinhas na fila ATÉ que se encontre
+//                // uma célula de fronteira (i.e. até achar uma célula onde c->planType == FRONTIER). Esta célula deve
+//                // ser setada como objetivo, i.ie. fazer goal = c.
+//                while((neighbor->x != goalPose->x) && (neighbor->y != goalPose->y))
+//                {
+//                    pq.push(neighbor);
+//                }
+//            }
+//        }
+//    }
+//}
