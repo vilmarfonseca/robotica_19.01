@@ -52,8 +52,8 @@ void Planning::setNewRobotPose(Pose p)
     newGridLimits.minY = std::min(newGridLimits.minY,newRobotPosition.y-maxUpdateRange);
     newGridLimits.maxY = std::max(newGridLimits.maxY,newRobotPosition.y+maxUpdateRange);
 
-    std::cout << "NewPose X: " << newRobotPosition.x << std::endl;
-    std::cout << "NewPose Y: " << newRobotPosition.y << std::endl;
+//    std::cout << "NewPose X: " << newRobotPosition.x << std::endl;
+//    std::cout << "NewPose Y: " << newRobotPosition.y << std::endl;
 }
 
 void Planning::setGoalPose(Pose p)
@@ -67,12 +67,14 @@ void Planning::setGoalPose(Pose p)
 void Planning::setMapFromMCL(int mapWidth, int mapHeight, CellOccType** mapcells)
 {
     Cell* c;
+
     for(int y=0; y < mapHeight; y++)
     {
         for(int x=0; x < mapWidth; x++)
         {
             {
                 c = grid->getCell(x,y);
+                //    std::cout << "mapCell: " << mapcells[x] << mapcells[y] << std::endl;
                 c->occType = mapcells[x][y];
             }
         }
@@ -85,8 +87,8 @@ void Planning::run()
 
     resetCellsTypes();
 
-    // update robot position and grid limits using last position informed by the robot
     robotPosition = newRobotPosition;
+
     gridLimits = newGridLimits;
 
     updateCellsTypes();
@@ -102,7 +104,6 @@ void Planning::run()
         foundFirstFrontier = true;
         computeHeuristic();
         computeAStar();
-//        std::cout << "Saiu AStar.";
         markPathCells();
         findLocalGoal();
 
@@ -436,8 +437,8 @@ void Planning::computeAStar()
 
     int x = robotPosition.x;
     int y = robotPosition.y;
-    std::cout << "Posição do robô para o A-estrela X: " << robotPosition.x << std::endl;
-    std::cout << "Posição do robô para o A-estrela Y: " << robotPosition.y << std::endl;
+//    std::cout << "Posição do robô para o A-estrela X: " << robotPosition.x << std::endl;
+//    std::cout << "Posição do robô para o A-estrela Y: " << robotPosition.y << std::endl;
     // Start node.
     start = grid->getCell(x,y);
     start->g = start->f = 0;

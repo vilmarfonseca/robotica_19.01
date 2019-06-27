@@ -8,6 +8,7 @@ class Planning;
 #include "Robot.h"
 #include "Grid.h"
 #include "Utils.h"
+#include "MCL.h"
 
 typedef struct
 {

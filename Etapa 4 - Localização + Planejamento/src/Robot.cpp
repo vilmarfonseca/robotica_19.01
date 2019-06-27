@@ -83,24 +83,26 @@ void Robot::run()
             base.writeOnLog();
     }
 
-    currentPose_ = base.getOdometry();
+    currentPose2_ = base.getOdometry();
+
     if(firstIteration){
-        prevLocalizationPose_ = currentPose_;
+        prevLocalizationPose_ = currentPose2_;
         firstIteration = false;
     }
 
     Action u;
-    u.rot1 = atan2(currentPose_.y-prevLocalizationPose_.y,currentPose_.x-prevLocalizationPose_.x)-DEG2RAD(currentPose_.theta);
-    u.trans = sqrt(pow(currentPose_.x-prevLocalizationPose_.x,2)+pow(currentPose_.y-prevLocalizationPose_.y,2));
-    u.rot2 = DEG2RAD(currentPose_.theta)-DEG2RAD(prevLocalizationPose_.theta)-u.rot1;
+    u.rot1 = atan2(currentPose2_.y-prevLocalizationPose_.y,currentPose2_.x-prevLocalizationPose_.x)-DEG2RAD(currentPose2_.theta);
+    u.trans = sqrt(pow(currentPose2_.x-prevLocalizationPose_.x,2)+pow(currentPose2_.y-prevLocalizationPose_.y,2));
+    u.rot2 = DEG2RAD(currentPose2_.theta)-DEG2RAD(prevLocalizationPose_.theta)-u.rot1;
 
     // check if there is enough robot motion
     if(u.trans > 0.1 || fabs(u.rot1) > DEG2RAD(30) || fabs(u.rot2) > DEG2RAD(30))
     {
-        std::cout << currentPose_ << std::endl;
+        std::cout << currentPose2_ << std::endl;
         mcl->run(u,base.getLaserReadings());
-        prevLocalizationPose_ = currentPose_;
+        prevLocalizationPose_ = currentPose2_;
     }
+
 
     pthread_mutex_lock(grid->mutex);
 
@@ -111,18 +113,19 @@ void Robot::run()
 
     pthread_mutex_unlock(grid->mutex);
 
-//    plan->setNewRobotPose(currentPose_);
-    plan->setNewRobotPose(mcl->meanParticlePose);
-//    std::cout << "MeanParticlesPose X: " << mcl->meanParticlePose.x << std::endl;
-//    std::cout << "MeanParticlesPose Y: " << mcl->meanParticlePose.y << std::endl;
-    plan->setGoalPose(mcl->goal);
-//        std::cout << "majoraxis : " << mcl->covMajorAxis << std::endl;
-//        std::cout << "minoraxis : " << mcl->covMinorAxis << std::endl;
-//      if(mcl->covMajorAxis < 2.0 || mcl->covMinorAxis < 1.5);
-
     plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
+    if(mcl->localizationReady)
+    {
+        currentPose_ = mcl->meanParticlePose;
+    }
+    else
+    {
+        currentPose_ = base.getOdometry();
+    }
 
+    plan->setNewRobotPose(currentPose_);
 
+    plan->setGoalPose(mcl->goal);
 
     // Save path traversed by the robot
     if(base.isMoving() || logMode_==PLAYBACK){

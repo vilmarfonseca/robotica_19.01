@@ -8,6 +8,7 @@
 
 #include <GL/glut.h>
 
+
 MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     maxRange(maxRange), mutex(m)
 {
@@ -18,6 +19,8 @@ MCL::MCL(float maxRange, std::string mapName, pthread_mutex_t* m):
     readMap(mapName);
     scale = 10;
     transparency = false;
+    localizationReady = false;
+
 
     numParticles = 10000;
 
@@ -31,6 +34,11 @@ void MCL::run(const Action &u, const std::vector<float> &z)
     resampling();
 
     updateMeanAndCovariance();
+
+    if(covMajorAxis < 0.8)
+    {
+        localizationReady = true;
+    }
 }
 
 
@@ -81,7 +89,6 @@ void MCL::weighting(const std::vector<float> &z)
     {
         individualProb = 0.0;
         totalProb = 1.0;
-        //totalWeight = 0.0; //NÃO DEVE SER ZERADO AQUI
         int count = 0;
          /// 1: elimine particulas fora do espaco livre
         if(!(mapCells[(int)(particles[i].p.x*scale)][(int)(particles[i].p.y*scale)] == FREE))
@@ -218,7 +225,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/vilmarfonseca/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/nicholas/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);

@@ -38,6 +38,7 @@ public:
 protected:
 
     Pose currentPose_;
+    Pose currentPose2_;
     Pose prevLocalizationPose_;
     std::vector<Pose> path_;
 

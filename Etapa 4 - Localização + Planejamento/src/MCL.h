@@ -32,6 +32,7 @@ public:
     int mapHeight;
 
     bool transparency;
+    bool localizationReady;
 
     Pose goal;
 
@@ -59,8 +60,6 @@ private:
 
     int numParticles;
     std::vector<MCLparticle> particles;
-
-
 
     pthread_mutex_t* mutex;
 };
