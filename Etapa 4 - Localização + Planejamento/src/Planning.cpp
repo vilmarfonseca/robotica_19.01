@@ -54,6 +54,10 @@ void Planning::setNewRobotPose(Pose p)
 
 //    std::cout << "NewPose X: " << newRobotPosition.x << std::endl;
 //    std::cout << "NewPose Y: " << newRobotPosition.y << std::endl;
+//    std::cout << "newGridLimits.minX: " << newGridLimits.minX << std::endl;
+//    std::cout << "newGridLimits.maxX: " << newGridLimits.maxX << std::endl;
+//    std::cout << "newGridLimits.minY: " << newGridLimits.minY << std::endl;
+//    std::cout << "newGridLimits.maxY: " << newGridLimits.maxY << std::endl;
 }
 
 void Planning::setGoalPose(Pose p)
@@ -509,6 +513,8 @@ void Planning::findLocalGoal()
     }
 
     localGoal->planType = LOCALGOAL;
+    std::cout << "localGoal X :" << localGoal->x << std::endl;
+    std::cout << "localGoal Y :" << localGoal->y << std::endl;
 }
 
 ///////////////////////////////////////////////////

@@ -225,7 +225,7 @@ float MCL::computeExpectedMeasurement(int index, Pose &pose)
 
 void MCL::readMap(std::string mapName)
 {
-    std::string name("/home/nicholas/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
+    std::string name("/home/vilmarfonseca/robotica_19.01/Etapa 4 - Localização + Planejamento/DiscreteMaps/");
     name += mapName;
     std::ifstream file;
     file.open(name.c_str(), std::ifstream::in);

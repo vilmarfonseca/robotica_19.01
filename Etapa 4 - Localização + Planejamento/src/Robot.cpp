@@ -125,7 +125,7 @@ void Robot::run()
 
     plan->setNewRobotPose(currentPose_);
 
-    plan->setGoalPose(mcl->goal);
+//    plan->setGoalPose(mcl->goal);
 
     // Save path traversed by the robot
     if(base.isMoving() || logMode_==PLAYBACK){
@@ -239,9 +239,9 @@ void Robot::wallFollow()
 void Robot::followPotentialField()
 {
     int scale = grid->getMapScale();
-    int robotX=currentPose_.x*scale;
-    int robotY=currentPose_.y*scale;
-    float robotAngle = currentPose_.theta;
+    int robotX=currentPose2_.x*scale;
+    int robotY=currentPose2_.y*scale;
+    float robotAngle = currentPose2_.theta;
 
     // how to access the grid cell associated to the robot position
     Cell* c=grid->getCell(robotX,robotY);
@@ -304,9 +304,9 @@ void Robot::mappingWithLogOddsUsingLaser()
     float maxRange = base.getMaxLaserRange(); //Valor em metros, multiplicar por scale para obter em células.
     int maxRangeInt = maxRange*scale;
 
-    int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
-    int robotY=currentPose_.y*scale;
-    float robotAngle = currentPose_.theta;  //Teta do robô.
+    int robotX=currentPose2_.x*scale; // Posição já mapeada para uma célula do grid.
+    int robotY=currentPose2_.y*scale;
+    float robotAngle = currentPose2_.theta;  //Teta do robô.
 
     // TODO: define fixed values of occupancy
     float locc, lfree;
@@ -637,7 +637,7 @@ void Robot::mappingWithHIMMUsingLaser()
 // This allows us to later play back the exact run.
 void Robot::writeOnLog()
 {
-    logFile_->writePose("Odometry",currentPose_);
+    logFile_->writePose("Odometry",currentPose2_);
     logFile_->writeSensors("Sonar",base.getSonarReadings());
     logFile_->writeSensors("Laser",base.getLaserReadings());
 }
