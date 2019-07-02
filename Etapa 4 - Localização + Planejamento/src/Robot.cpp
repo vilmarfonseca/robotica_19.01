@@ -50,6 +50,8 @@ void Robot::initialize(ConnectionMode cmode, LogMode lmode, std::string fname, s
 
     mcl = new MCL(base.getMaxLaserRange(),mapName,grid->mutex);
 
+    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
+
     // initialize ARIA
     if(logMode_!=PLAYBACK){
         bool success = base.initialize(cmode,lmode,fname);
@@ -83,24 +85,24 @@ void Robot::run()
             base.writeOnLog();
     }
 
-    currentPose2_ = base.getOdometry();
+    currentPose_ = base.getOdometry();
 
     if(firstIteration){
-        prevLocalizationPose_ = currentPose2_;
+        prevLocalizationPose_ = currentPose_;
         firstIteration = false;
     }
 
     Action u;
-    u.rot1 = atan2(currentPose2_.y-prevLocalizationPose_.y,currentPose2_.x-prevLocalizationPose_.x)-DEG2RAD(currentPose2_.theta);
-    u.trans = sqrt(pow(currentPose2_.x-prevLocalizationPose_.x,2)+pow(currentPose2_.y-prevLocalizationPose_.y,2));
-    u.rot2 = DEG2RAD(currentPose2_.theta)-DEG2RAD(prevLocalizationPose_.theta)-u.rot1;
+    u.rot1 = atan2(currentPose_.y-prevLocalizationPose_.y,currentPose_.x-prevLocalizationPose_.x)-DEG2RAD(currentPose_.theta);
+    u.trans = sqrt(pow(currentPose_.x-prevLocalizationPose_.x,2)+pow(currentPose_.y-prevLocalizationPose_.y,2));
+    u.rot2 = DEG2RAD(currentPose_.theta)-DEG2RAD(prevLocalizationPose_.theta)-u.rot1;
 
     // check if there is enough robot motion
     if(u.trans > 0.1 || fabs(u.rot1) > DEG2RAD(30) || fabs(u.rot2) > DEG2RAD(30))
     {
-        std::cout << currentPose2_ << std::endl;
+        std::cout << currentPose_ << std::endl;
         mcl->run(u,base.getLaserReadings());
-        prevLocalizationPose_ = currentPose2_;
+        prevLocalizationPose_ = currentPose_;
     }
 
 
@@ -113,17 +115,22 @@ void Robot::run()
 
     pthread_mutex_unlock(grid->mutex);
 
-    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
+//    plan->setMapFromMCL(mcl->mapWidth, mcl->mapHeight, mcl->mapCells);
     if(mcl->localizationReady)
     {
-        currentPose_ = mcl->meanParticlePose;
+//        std::cout << "Acabou mcl!" << std::endl;
+//        sleep(2);
+        currentPose2_ = mcl->meanParticlePose;
+        plan->setNewRobotPose(currentPose2_);
+//        plan->setGoalPose(mcl->goal);
     }
     else
     {
-        currentPose_ = base.getOdometry();
+        plan->setNewRobotPose(currentPose_);
+//        plan->setGoalPose(currentPose_);
     }
 
-    plan->setNewRobotPose(currentPose_);
+//    plan->setNewRobotPose(currentPose_);
 
 //    plan->setGoalPose(mcl->goal);
 
@@ -239,9 +246,15 @@ void Robot::wallFollow()
 void Robot::followPotentialField()
 {
     int scale = grid->getMapScale();
-    int robotX=currentPose2_.x*scale;
-    int robotY=currentPose2_.y*scale;
-    float robotAngle = currentPose2_.theta;
+    int robotX=currentPose_.x*scale;
+    int robotY=currentPose_.y*scale;
+    float robotAngle = currentPose_.theta;
+
+    if(mcl->localizationReady)
+    {
+        int robotX=currentPose2_.x*scale;
+        int robotY=currentPose2_.y*scale;
+    }
 
     // how to access the grid cell associated to the robot position
     Cell* c=grid->getCell(robotX,robotY);
@@ -304,9 +317,15 @@ void Robot::mappingWithLogOddsUsingLaser()
     float maxRange = base.getMaxLaserRange(); //Valor em metros, multiplicar por scale para obter em células.
     int maxRangeInt = maxRange*scale;
 
-    int robotX=currentPose2_.x*scale; // Posição já mapeada para uma célula do grid.
-    int robotY=currentPose2_.y*scale;
-    float robotAngle = currentPose2_.theta;  //Teta do robô.
+    int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
+    int robotY=currentPose_.y*scale;
+    float robotAngle = currentPose_.theta;  //Teta do robô.
+
+    if(mcl->localizationReady)
+    {
+        int robotX=currentPose2_.x*scale;
+        int robotY=currentPose2_.y*scale;
+    }
 
     // TODO: define fixed values of occupancy
     float locc, lfree;
@@ -418,6 +437,12 @@ void Robot::mappingUsingSonar()
     int robotX=currentPose_.x*scale; // Posição já mapeada para uma célula do grid.
     int robotY=currentPose_.y*scale;
     float robotAngle = currentPose_.theta;  //Teta do robô.
+
+    if(mcl->localizationReady)
+    {
+        int robotX=currentPose2_.x*scale;
+        int robotY=currentPose2_.y*scale;
+    }
 
     // how to access a grid cell
     //Cell* c=grid->getCell(robotX,robotY);
@@ -531,6 +556,12 @@ void Robot::mappingWithHIMMUsingLaser()
     int robotY=currentPose_.y*scale;
     float robotAngle = currentPose_.theta;  //Teta do robô.
 
+    if(mcl->localizationReady)
+    {
+        int robotX=currentPose2_.x*scale;
+        int robotY=currentPose2_.y*scale;
+    }
+
     // how to access a grid cell
     //Cell* c=grid->getCell(robotX,robotY);
 
@@ -637,7 +668,11 @@ void Robot::mappingWithHIMMUsingLaser()
 // This allows us to later play back the exact run.
 void Robot::writeOnLog()
 {
-    logFile_->writePose("Odometry",currentPose2_);
+    if(mcl->localizationReady)
+    {
+        currentPose_ = currentPose2_;
+    }
+    logFile_->writePose("Odometry",currentPose_);
     logFile_->writeSensors("Sonar",base.getSonarReadings());
     logFile_->writeSensors("Laser",base.getLaserReadings());
 }
@@ -693,6 +728,11 @@ void Robot::drawPotGradient(double scale)
     Cell* c;
     int robotX=currentPose_.x*scale;
     int robotY=currentPose_.y*scale;
+    if(mcl->localizationReady)
+    {
+        int robotX=currentPose2_.x*scale;
+        int robotY=currentPose2_.y*scale;
+    }
     c = grid->getCell(robotX,robotY);
 
     glColor3f(0.0,0.6,0.2);
@@ -721,7 +761,15 @@ bool Robot::isRunning()
 
 const Pose& Robot::getCurrentPose()
 {
-    return currentPose_;
+    if(mcl->localizationReady)
+    {
+        return currentPose2_;
+    }
+    else
+    {
+        return currentPose_;
+    }
+
 }
 
 void Robot::drawMCL()

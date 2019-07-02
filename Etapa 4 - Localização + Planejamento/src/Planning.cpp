@@ -103,7 +103,6 @@ void Planning::run()
 
     // TODO: define motion planning strategy
 
-
     if(!frontierCenters.empty()){
         foundFirstFrontier = true;
         computeHeuristic();
@@ -768,7 +767,7 @@ void Planning::updateGradient()
 //    pq.push(start);
 
 //    // Loop para achar o caminho.
-//    while(pq.top() != NULL && goal == NULL)
+//    while(pq.top() != NULL && pq.top() != goal )
 //    {
 //        c = pq.top();
 
@@ -780,9 +779,8 @@ void Planning::updateGradient()
 //        for(i = 0; i <= 7; i++)
 //        {
 //            // Altera entre os 8 vizinhos
-
 //            neighbor = grid->getCell(c->x+offset[i][0],c->y+offset[i][1]);
-//            if(neighbor->f == DBL_MAX && goal == NULL)
+//            if(neighbor->f == DBL_MAX)
 //            {
 //                neighbor->g = c->g + cost[i];
 //                neighbor->f = neighbor->g + neighbor->h;
